@@ -1,0 +1,8 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="27" android:translateY="27">
+        <!-- a stylised lyre / wave mark -->
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M18,8 C11,8 8,14 8,22 C8,34 18,44 27,48 C36,44 46,34 46,22 C46,14 43,8 36,8 C33,8 30,10 27,13 C24,10 21,8 18,8 Z M18,13 C21,13 23,15 25,18 L25,40 C18,36 13,29 13,22 C13,16 15,13 18,13 Z M36,13 C39,13 41,16 41,22 C41,29 36,36 29,40 L29,18 C31,15 33,13 36,13 Z" />
+    </group>
+</vector>
