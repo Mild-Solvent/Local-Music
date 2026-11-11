@@ -220,7 +220,7 @@ object Downloader {
             update(t.id) { it.copy(status = DlStatus.SAVING, line = "Saving to your library…", progress = 100f) }
             val audio = dir.walkTopDown().filter { it.isFile && it.extension.lowercase() in AUDIO_EXT }.toList()
             check(audio.isNotEmpty()) { "Nothing was downloaded" }
-            val saved = audio.mapNotNull { f -> runCatching { saveToLibrary(f); f.nameWithoutExtension }.getOrNull() }
+            val saved = audio.mapNotNull { f -> runCatching { saveToLibrary(f); f.nameWithoutExtension.replace(ID_SUFFIX, "") }.getOrNull() }
             check(saved.isNotEmpty()) { "Could not save the file to Music/Lyra" }
             update(t.id) {
                 it.copy(
@@ -268,7 +268,7 @@ object Downloader {
     }
 
     private fun saveToLibrary(file: File) {
-        val name = file.name.replace(Regex(""" \[[A-Za-z0-9_-]{6,}]"""), "")
+        val name = file.name.replace(ID_SUFFIX, "")
         val mime = when (file.extension.lowercase()) {
             "mp3" -> "audio/mpeg"; "m4a", "mp4" -> "audio/mp4"; "opus", "ogg" -> "audio/ogg"
             "webm" -> "audio/webm"; "flac" -> "audio/flac"; "wav" -> "audio/wav"; else -> "audio/*"
@@ -299,6 +299,7 @@ object Downloader {
         }
     }
 
+    private val ID_SUFFIX = Regex(""" \[[A-Za-z0-9_-]{6,}]""")
     private val AUDIO_EXT = setOf("mp3", "m4a", "opus", "ogg", "webm", "flac", "wav", "mp4", "aac")
 
     /** Pulls the first link out of shared text like "Check this out https://youtu.be/xyz". */
