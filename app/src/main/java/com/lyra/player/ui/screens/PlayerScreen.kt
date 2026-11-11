@@ -162,7 +162,7 @@ fun PlayerScreen() {
                 value = if (dragging) dragValue else (position.toFloat() / dur).coerceIn(0f, 1f),
                 onValueChange = { dragging = true; dragValue = it },
                 onValueChangeFinished = { PlayerConnection.seekTo((dragValue * dur).toLong()); position = (dragValue * dur).toLong(); dragging = false },
-                colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface, activeTrackColor = MaterialTheme.colorScheme.onSurface),
+                colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface, activeTrackColor = MaterialTheme.colorScheme.onSurface, inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)),
             )
             Row(Modifier.fillMaxWidth()) {
                 Text(formatDuration(if (dragging) (dragValue * dur).toLong() else position), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

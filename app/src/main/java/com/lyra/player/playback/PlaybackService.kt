@@ -34,6 +34,15 @@ class PlaybackService : MediaSessionService() {
     private lateinit var player: ExoPlayer
     private val handler = Handler(Looper.getMainLooper())
     private var consecutiveErrors = 0
+    private var lastCounted: String? = null
+
+    /** Count a play once per track start, when it is actually playing. */
+    private fun countPlay() {
+        val id = player.currentMediaItem?.mediaId ?: return
+        if (id == lastCounted || !player.playWhenReady) return
+        lastCounted = id
+        id.toLongOrNull()?.let { LibraryStore.recordPlay(it) }
+    }
 
     private val saver = object : Runnable {
         override fun run() {
@@ -63,13 +72,14 @@ class PlaybackService : MediaSessionService() {
 
         player.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                mediaItem?.mediaId?.toLongOrNull()?.let { if (player.playWhenReady) LibraryStore.recordPlay(it) }
+                lastCounted = null
+                countPlay()
                 QueueSaver.save(player)
                 SleepTimer.onTrackChanged()
             }
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 QueueSaver.save(player)
-                if (isPlaying) consecutiveErrors = 0
+                if (isPlaying) { consecutiveErrors = 0; countPlay() }
             }
             override fun onPlayerError(error: PlaybackException) {
                 // A broken/deleted file must not stop the whole queue: skip it.

@@ -123,13 +123,24 @@ class MainActivity : ComponentActivity() {
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res ->
             granted = res[audioPermission()] == true || hasAudioPermission()
         }
-        val request = {
+        var asked by remember { mutableStateOf(false) }
+        val request = request@{
+            if (asked && !shouldShowRequestPermissionRationale(audioPermission())) {
+                // Permanently denied: send her to the app's settings page to switch it on.
+                startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+                return@request
+            }
+            asked = true
             val perms = buildList {
                 add(audioPermission())
                 if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
                 if (Build.VERSION.SDK_INT <= 28) add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
             launcher.launch(perms.toTypedArray())
+        }
+        androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+            if (hasAudioPermission()) granted = true
+            onPauseOrDispose { }
         }
         if (!granted) {
             PermissionScreen(onGrant = request)
@@ -208,6 +219,7 @@ class MainActivity : ComponentActivity() {
         CompositionLocalProvider(LocalActions provides actions) {
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,
+                contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
                 bottomBar = {
                     if (!fullScreen) Column {
                         MiniPlayer(onOpen = { actions.openPlayer() })
