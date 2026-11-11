@@ -58,7 +58,7 @@ class DownloadService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_lyra)
-            .setContentTitle(if (progress >= 0) "Downloading" else "Lyra")
+            .setContentTitle(if (progress >= 0) "Downloading" else "Hushwave")
             .setContentText(text)
             .setOnlyAlertOnce(true)
             .setOngoing(progress >= 0)
