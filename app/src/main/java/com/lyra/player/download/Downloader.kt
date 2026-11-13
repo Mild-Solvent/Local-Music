@@ -60,7 +60,7 @@ enum class SearchSource(val prefix: String, val label: String) { YOUTUBE("ytsear
 
 /**
  * Built-in music downloader, powered by yt-dlp + ffmpeg running locally inside the app
- * (no converter websites, no ads, no pop-ups). Saves into Music/Hushwave so the player picks it up.
+ * (no converter websites, no ads, no pop-ups). Saves into Music/Muzza so the player picks it up.
  */
 object Downloader {
     private const val TAG = "Downloader"
@@ -221,7 +221,7 @@ object Downloader {
             val audio = dir.walkTopDown().filter { it.isFile && it.extension.lowercase() in AUDIO_EXT }.toList()
             check(audio.isNotEmpty()) { "Nothing was downloaded" }
             val saved = audio.mapNotNull { f -> runCatching { saveToLibrary(f); f.nameWithoutExtension.replace(ID_SUFFIX, "") }.getOrNull() }
-            check(saved.isNotEmpty()) { "Could not save the file to Music/Hushwave" }
+            check(saved.isNotEmpty()) { "Could not save the file to Music/Muzza" }
             update(t.id) {
                 it.copy(
                     status = DlStatus.DONE, saved = saved, line = "",
@@ -249,7 +249,7 @@ object Downloader {
         // "Artist - Song (Official Video)" → artist = Artist, title = Song
         req.addOption("--parse-metadata", "title:(?P<artist>.+?) - (?P<title>.+)")
         req.addCommands(listOf("--replace-in-metadata", "title", """(?i)\s*[(\[][^)\]]*(official|lyric|lyrics|audio|video|visuali[sz]er|hd|hq|4k|mv)[^)\]]*[)\]]""", ""))
-        req.addOption("--parse-metadata", "%(album,playlist_title|Hushwave downloads)s:%(meta_album)s")
+        req.addOption("--parse-metadata", "%(album,playlist_title|Muzza downloads)s:%(meta_album)s")
         if (fancy && fmt != AudioFormat.OPUS) {
             req.addOption("--embed-thumbnail")
             req.addOption("--convert-thumbnails", "jpg")
@@ -278,7 +278,7 @@ object Downloader {
             val values = ContentValues().apply {
                 put(MediaStore.Audio.Media.DISPLAY_NAME, name)
                 put(MediaStore.Audio.Media.MIME_TYPE, mime)
-                put(MediaStore.Audio.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MUSIC}/Hushwave")
+                put(MediaStore.Audio.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MUSIC}/Muzza")
                 put(MediaStore.Audio.Media.IS_PENDING, 1)
                 put(MediaStore.Audio.Media.IS_MUSIC, 1)
             }
@@ -292,7 +292,7 @@ object Downloader {
             }
         } else {
             @Suppress("DEPRECATION")
-            val dest = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Hushwave").apply { mkdirs() }
+            val dest = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC), "Muzza").apply { mkdirs() }
             val out = File(dest, name)
             file.copyTo(out, overwrite = true)
             MediaScannerConnection.scanFile(ctx, arrayOf(out.absolutePath), arrayOf(mime), null)

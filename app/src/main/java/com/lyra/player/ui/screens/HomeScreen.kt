@@ -209,7 +209,7 @@ fun PermissionScreen(onGrant: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.LibraryMusic, null, tint = Color.White, modifier = Modifier.size(48.dp)) }
             Spacer(Modifier.height(24.dp))
-            Text("Welcome to Hushwave", style = MaterialTheme.typography.headlineMedium)
+            Text("Welcome to Muzza", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(8.dp))
             Text(
                 "Your music, offline, no ads and no account. Allow access to the songs on this phone to get started.",

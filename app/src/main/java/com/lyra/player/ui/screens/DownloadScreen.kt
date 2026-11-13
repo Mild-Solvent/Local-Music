@@ -183,9 +183,9 @@ fun DownloadScreen(initialUrl: String?, initialQuery: String?, onConsumed: () ->
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("How it works", style = MaterialTheme.typography.titleMedium)
                     Text("• Search for a song, or paste a YouTube / SoundCloud / Bandcamp link.")
-                    Text("• Or in YouTube tap Share → Hushwave, and it downloads straight away.")
+                    Text("• Or in YouTube tap Share → Muzza, and it downloads straight away.")
                     Text("• Playlist links download the whole playlist.")
-                    Text("• Songs are saved to Music/Hushwave as ${Prefs.downloadFormat.name.lowercase()} with cover art, and play offline forever.")
+                    Text("• Songs are saved to Music/Muzza as ${Prefs.downloadFormat.name.lowercase()} with cover art, and play offline forever.")
                     Text("Only download music you're allowed to: free releases, your own uploads, Creative Commons and so on.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }

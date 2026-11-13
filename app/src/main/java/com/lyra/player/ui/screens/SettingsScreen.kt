@@ -120,7 +120,7 @@ fun SettingsScreen() {
 
             HorizontalDivider()
             Header("About")
-            Text("Hushwave ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge)
+            Text("Muzza ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge)
             Text("No ads. No account. No tracking. Plays fully offline; the internet is only used when you download.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(32.dp))

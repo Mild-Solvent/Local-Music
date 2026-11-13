@@ -1,4 +1,4 @@
-# Hushwave — offline music player for Android
+# Muzza — offline music player for Android
 
 No ads. No account. No Wi-Fi needed. Plays the music that's on the phone, and has a safe
 built-in downloader so you never need sketchy "YouTube to MP3" websites.
@@ -12,7 +12,7 @@ built-in downloader so you never need sketchy "YouTube to MP3" websites.
 
 **Extras** · sleep timer with gentle fade-out (or "end of this song") · equalizer with presets, bass boost, 3D surround, volume boost · speed & pitch (with "slowed" and "sped up" presets) · skip silence · ±10 s seek · swipe the cover to change song · dark / light / wallpaper colours · share or delete a song file
 
-**Downloader** · search YouTube or SoundCloud inside the app, or paste any link yt-dlp supports · Share → Hushwave from the YouTube app · whole playlists · M4A / MP3 / Opus · cover art and artist/title cleaned up automatically · saved to `Music/Hushwave` · runs in the background with a progress notification · self-updating engine (yt-dlp + ffmpeg run locally on the phone)
+**Downloader** · search YouTube or SoundCloud inside the app, or paste any link yt-dlp supports · Share → Muzza from the YouTube app · whole playlists · M4A / MP3 / Opus · cover art and artist/title cleaned up automatically · saved to `Music/Muzza` · runs in the background with a progress notification · self-updating engine (yt-dlp + ffmpeg run locally on the phone)
 
 Only download music you have the right to download.
 
