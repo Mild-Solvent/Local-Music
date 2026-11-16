@@ -143,8 +143,8 @@ fun PlayerScreen() {
                 if (water) SeaBox({ actions.nav.popBackStack() }, 44.dp, 16.dp, Sea.Cream, "Close", Icons.Filled.KeyboardArrowDown, Sea.Blue, 30.dp)
                 else IconButton({ actions.nav.popBackStack() }) { Icon(Icons.Filled.KeyboardArrowDown, "Close", Modifier.size(32.dp)) }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("PLAYING FROM YOUR LIBRARY", style = MaterialTheme.typography.labelSmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(song.album, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("PLAYING FROM YOUR LIBRARY", style = MaterialTheme.typography.labelSmall, color = if (water) Sea.LightText else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(song.album, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = if (water) Sea.LightText else Color.Unspecified, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 if (water) SeaBox({ actions.showMenu(SongMenu(song)) }, 44.dp, 16.dp, Sea.Cream, "More", Icons.Filled.MoreVert, Sea.Blue, 24.dp)
                 else IconButton({ actions.showMenu(SongMenu(song)) }) { Icon(Icons.Filled.MoreVert, "More") }
@@ -201,9 +201,9 @@ fun PlayerScreen() {
                 },
             )
             Row(Modifier.fillMaxWidth()) {
-                Text(formatDuration(if (dragging) (dragValue * dur).toLong() else position), style = MaterialTheme.typography.bodySmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatDuration(if (dragging) (dragValue * dur).toLong() else position), style = MaterialTheme.typography.bodySmall, color = if (water) Sea.LightText else MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.weight(1f))
-                Text(formatDuration(ps.duration), style = MaterialTheme.typography.bodySmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatDuration(ps.duration), style = MaterialTheme.typography.bodySmall, color = if (water) Sea.LightText else MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

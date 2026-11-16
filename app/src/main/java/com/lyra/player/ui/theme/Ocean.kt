@@ -58,6 +58,7 @@ object Sea {
     val BackCoral = Color(0xFF2BB0F2)
     val BackCoralDeep = Color(0xFF0A8FD8)
     val Star = Color(0xFF1B4FA8)
+    val LightText = Color(0xFFD3F0F7)
 }
 
 // ---- shapes from the design (SVG path data) ----
