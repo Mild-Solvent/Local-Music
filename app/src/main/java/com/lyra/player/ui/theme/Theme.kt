@@ -82,12 +82,12 @@ private val Type = Typography().let { t ->
 // ---- Cute water theme ----
 private val Water = lightColorScheme(
     primary = Color(0xFF1B4FA8),
-    onPrimary = Color(0xFFFAF2E0),
+    onPrimary = Color.White,
     primaryContainer = Color(0xFF74D0E0),
     onPrimaryContainer = Color(0xFF08294F),
     inversePrimary = Color(0xFF74D0E0),
     secondary = Color(0xFF1B4FA8),
-    onSecondary = Color(0xFFFAF2E0),
+    onSecondary = Color.White,
     secondaryContainer = Color(0xFFFAF2E0),
     onSecondaryContainer = Color(0xFF2470DF),
     tertiary = Color(0xFFF6C445),
