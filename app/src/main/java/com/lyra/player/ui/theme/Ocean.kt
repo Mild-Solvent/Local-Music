@@ -55,8 +55,8 @@ object Sea {
     val Navy = Color(0xFF08294F)
     val Muted = Color(0xFF2E5A8A)
     val Mint = Color(0xFF9ADDEA)
-    val BackCoral = Color(0xFF2BB0F2)
-    val BackCoralDeep = Color(0xFF0A8FD8)
+    val BackCoral = Color(0xFF17A6EE)   // solid, same tone as the old see-through coral
+    val BackCoralDeep = Color(0xFF0697E3)
     val Star = Color(0xFF1B4FA8)
     val LightText = Color(0xFFD3F0F7)
 }
@@ -186,9 +186,9 @@ fun OceanBackdrop(kind: Backdrop, modifier: Modifier = Modifier) {
             fun big(x: Float, sx: Float, s: Float, c: Color, a: Float) =
                 withTransform({ translate(x, h); scale(sx, s, Offset.Zero) }) { strokes(BIG_CORAL, c, 20f, a) }
             if (kind == Backdrop.PLAYER) {
-                big(70f, -0.9f, 0.9f, Sea.BackCoral, 0.45f); big(330f, 1f, 1f, Sea.BackCoral, 0.45f)
+                big(70f, -0.9f, 0.9f, Sea.BackCoral, 1f); big(330f, 1f, 1f, Sea.BackCoral, 1f)
             } else {
-                big(180f, 1.05f, 1.05f, Sea.BackCoral, 0.5f); big(360f, -0.75f, 0.75f, Sea.BackCoralDeep, 0.4f); big(30f, 0.55f, 0.55f, Sea.BackCoralDeep, 0.4f)
+                big(360f, -0.75f, 0.75f, Sea.BackCoralDeep, 1f); big(30f, 0.55f, 0.55f, Sea.BackCoralDeep, 1f); big(180f, 1.05f, 1.05f, Sea.BackCoral, 1f)
             }
             val t = clock.value
             when (kind) {
