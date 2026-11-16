@@ -144,7 +144,7 @@ fun SettingsScreen() {
 }
 
 @Composable
-private fun Header(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, color = if (LocalWater.current) Sea.Blue else MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
+private fun Header(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, color = if (LocalWater.current) Sea.Navy else MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
 
 @Composable
 private fun Toggle(title: String, sub: String, value: Boolean, onChange: (Boolean) -> Unit) {

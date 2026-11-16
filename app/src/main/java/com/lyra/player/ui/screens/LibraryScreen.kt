@@ -105,7 +105,7 @@ fun LibraryScreen() {
                         Modifier.height(40.dp).clip(RoundedCornerShape(14.dp)).background(if (sel) Sea.Cream else Sea.Tile)
                             .clickable { scope.launch { pager.animateScrollToPage(i) } }.padding(horizontal = 14.dp),
                         contentAlignment = Alignment.Center,
-                    ) { Text(t, style = MaterialTheme.typography.titleSmall, color = if (sel) Sea.Blue else Sea.Navy) }
+                    ) { Text(t, style = MaterialTheme.typography.titleSmall, color = Sea.Navy) }
                 }
             }
         } else PrimaryScrollableTabRow(selectedTabIndex = pager.currentPage, edgePadding = 8.dp, containerColor = Color.Transparent) {

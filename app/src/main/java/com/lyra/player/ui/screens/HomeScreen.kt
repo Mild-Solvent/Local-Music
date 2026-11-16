@@ -197,7 +197,7 @@ private fun QuickTile(title: String, sub: String, icon: ImageVector, colors: Lis
                 }
                 Column(Modifier.padding(start = 10.dp)) {
                     Text(title, style = MaterialTheme.typography.titleSmall, color = Sea.Navy, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(sub, style = MaterialTheme.typography.bodySmall, color = Sea.Muted, maxLines = 1)
+                    Text(sub, style = MaterialTheme.typography.bodySmall, color = Sea.Navy, maxLines = 1)
                 }
             }
         }
@@ -226,7 +226,7 @@ private fun Card(title: String, sub: String, center: Boolean = false, onClick: (
         art()
         Spacer(Modifier.height(6.dp))
         Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(sub, style = MaterialTheme.typography.bodySmall, color = if (water) Sea.Navy.copy(alpha = 0.75f) else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(sub, style = MaterialTheme.typography.bodySmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

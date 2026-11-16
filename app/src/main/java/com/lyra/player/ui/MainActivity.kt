@@ -294,9 +294,9 @@ class MainActivity : ComponentActivity() {
             else NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, content = items)
         }
         val itemColors = if (water) androidx.compose.material3.NavigationBarItemDefaults.colors(
-            selectedIconColor = com.lyra.player.ui.theme.Sea.Blue, selectedTextColor = com.lyra.player.ui.theme.Sea.Blue,
+            selectedIconColor = com.lyra.player.ui.theme.Sea.Blue, selectedTextColor = com.lyra.player.ui.theme.Sea.Navy,
             indicatorColor = com.lyra.player.ui.theme.Sea.Tile,
-            unselectedIconColor = com.lyra.player.ui.theme.Sea.Muted, unselectedTextColor = com.lyra.player.ui.theme.Sea.Muted,
+            unselectedIconColor = com.lyra.player.ui.theme.Sea.Muted, unselectedTextColor = com.lyra.player.ui.theme.Sea.Navy,
         ) else androidx.compose.material3.NavigationBarItemDefaults.colors()
         bar {
             tabs.forEach { t ->

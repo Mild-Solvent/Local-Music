@@ -246,7 +246,7 @@ fun PlayerScreen() {
                 TextButton({ showSpeed = true }) {
                     Icon(Icons.Filled.Speed, null, tint = if (ps.speed != 1f || ps.pitch != 1f) on else dim)
                     Spacer(Modifier.width(4.dp))
-                    Text("${"%.2f".format(ps.speed).trimEnd('0').trimEnd('.')}×", color = dim)
+                    Text("${"%.2f".format(ps.speed).trimEnd('0').trimEnd('.')}×", color = if (water) Sea.Navy else dim)
                 }
                 IconButton({ PlayerConnection.seekBy(10_000) }) { Icon(Icons.Filled.Forward10, "Forward 10 seconds", tint = dim) }
                 IconButton({ actions.nav.navigate("equalizer") }) { Icon(Icons.Filled.Equalizer, "Equalizer", tint = dim) }

@@ -81,7 +81,7 @@ private val Type = Typography().let { t ->
 
 // ---- Cute water theme ----
 private val Water = lightColorScheme(
-    primary = Color(0xFF2470DF),
+    primary = Color(0xFF1B4FA8),
     onPrimary = Color(0xFFFAF2E0),
     primaryContainer = Color(0xFF74D0E0),
     onPrimaryContainer = Color(0xFF08294F),
@@ -99,7 +99,7 @@ private val Water = lightColorScheme(
     surface = Color(0xFF049DEB),
     onSurface = Color(0xFF08294F),
     surfaceVariant = Color(0xFFCBE6E1),
-    onSurfaceVariant = Color(0xFF0A2B55),
+    onSurfaceVariant = Color(0xFF08294F),
     surfaceTint = Color.Transparent,
     inverseSurface = Color(0xFF08294F),
     inverseOnSurface = Color(0xFFFAF2E0),
