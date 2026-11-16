@@ -266,7 +266,7 @@ fun SeabedStrip(modifier: Modifier = Modifier) {
                 strokes(listOf("M40 70 V36", "M40 52 C30 46 28 38 28 28", "M40 46 C50 40 52 32 52 24"), Sea.YellowCoral, 8f)
             }
             brainCoral(150f, 44f, 13f, t)
-            at(250f - 10f * wave(t, 8f), 2f, 0.62f) { seaSlug() }
+            at(244f - 10f * wave(t, 8f), -6f, 0.8f) { seaSlug() }
         }
     }
 }

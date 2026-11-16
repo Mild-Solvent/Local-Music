@@ -257,6 +257,7 @@ fun PlayerScreen() {
                 TextButton({ actions.nav.navigate("queue") }, colors = pill) { Icon(Icons.AutoMirrored.Filled.QueueMusic, null); Spacer(Modifier.width(6.dp)); Text("Up next") }
             }
             SleepLabel(sleep)
+            if (water) Spacer(Modifier.height(48.dp))
         }
     }
 
