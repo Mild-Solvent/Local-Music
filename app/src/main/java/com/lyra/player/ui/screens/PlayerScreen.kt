@@ -193,7 +193,7 @@ fun PlayerScreen() {
                 onValueChange = { dragging = true; dragValue = it },
                 onValueChangeFinished = { PlayerConnection.seekTo((dragValue * dur).toLong()); position = (dragValue * dur).toLong(); dragging = false },
                 colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface, activeTrackColor = MaterialTheme.colorScheme.onSurface, inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)),
-                thumb = { if (water) FishThumb(Modifier.size(width = 38.dp, height = 22.dp)) else SliderDefaults.Thumb(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface)) },
+                thumb = { if (water) FishThumb(Modifier.size(width = 50.dp, height = 29.dp)) else SliderDefaults.Thumb(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface)) },
                 track = { st ->
                     val frac = (st.value - st.valueRange.start) / (st.valueRange.endInclusive - st.valueRange.start)
                     if (water) WavyTrack(frac, Modifier.fillMaxWidth().height(30.dp))

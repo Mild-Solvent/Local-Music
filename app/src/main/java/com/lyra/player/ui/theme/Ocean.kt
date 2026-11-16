@@ -72,8 +72,6 @@ private const val SLUG_FOOT = "M9 34 C7 40 3 44 1 47 C0 49 3 50 7 49 C11 52 15 5
 private const val SLUG_BODY = "M14 46 C4 44 6 30 18 26 C30 20 44 20 56 20 C76 20 92 28 92 40 C92 48 80 50 56 50 C38 50 22 48 14 46Z"
 private const val SLUG_STRIPE = "M6.67 43.05 C7.45 43.75 10.33 44.06 12.73 45.23 C15.63 46.65 16.02 48.83 23.62 49.19 C40.47 49.98 60.25 50.76 83.94 49.39 C88.25 49.14 91.21 48.82 94.19 45.24"
 private const val BRAIN = "M486.25 106.75 C493.62 97.54 497.57 113.05 506.42 105.95 C507.18 105.34 514.71 98.55 515.58 97.68 C521.58 91.68 530.25 104.5 533.5 98.25 M489.88 125.62 C496.75 117.03 498.29 127.94 507.77 128.02 C514.66 128.08 516.04 120 520.07 117.99 C526.18 114.94 529.86 122 536.74 117.63"
-private const val CREAM_FISH = "M318 120 C330 104 356 102 370 110 C380 115 380 126 370 131 C356 139 330 138 318 120Z"
-private const val CREAM_TAIL = "M324 120 C316 112 308 108 306 112 C308 116 310 118 310 120 C310 122 308 124 306 128 C308 132 316 128 324 120Z"
 private const val STAR = "M12 2.5c1 2.6 1.8 5 2.4 6.6 2.2.3 4.6.3 7.1.6-2 1.7-3.9 3.2-5.4 4.4.6 2.3 1.2 4.6 1.6 6.3-1.9-1.2-3.9-2.3-5.7-3.4-1.8 1.1-3.8 2.2-5.7 3.4.4-1.7 1-4 1.6-6.3C6.4 12.9 4.5 11.4 2.5 9.7c2.5-.3 4.9-.3 7.1-.6.6-1.6 1.4-4 2.4-6.6z"
 private val BIG_CORAL = listOf(
     "M0 0 C-10 -80 10 -140 0 -220", "M0 -150 C-40 -180 -80 -220 -90 -300", "M-90 -300 C-110 -350 -125 -400 -130 -460",
@@ -192,9 +190,6 @@ fun OceanBackdrop(kind: Backdrop, modifier: Modifier = Modifier) {
             }
             val t = clock.value
             when (kind) {
-                Backdrop.HOME -> swim(t, 9f) {
-                    at(-10f, 0f) { drawPath(p(CREAM_FISH), Sea.Cream); drawPath(p(CREAM_TAIL), Sea.Cream); drawCircle(Sea.Blue, 3f, Offset(365f, 116f)) }
-                }
                 Backdrop.LIBRARY -> at(232f - 10f * wave(t, 8f), 50f, 140f / 104f) { at(2f, 0f) { seaSlug() } }
                 else -> Unit
             }
