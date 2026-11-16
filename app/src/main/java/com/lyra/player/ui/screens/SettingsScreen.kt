@@ -1,5 +1,11 @@
 package com.lyra.player.ui.screens
 
+import com.lyra.player.ui.theme.LocalWater
+import com.lyra.player.ui.theme.Sea
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.Color
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -100,7 +106,7 @@ fun SettingsScreen() {
                 }
             }
             Text("Hides ringtones, voice notes and WhatsApp audio.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedButton({ scope.launch { MusicRepository.scan(); actions.toast("Found ${MusicRepository.library.value.songs.size} songs") } }) { Text("Rescan music") }
+            OutlinedButton(colors = seaButton(), onClick = { scope.launch { MusicRepository.scan(); actions.toast("Found ${MusicRepository.library.value.songs.size} songs") } }) { Text("Rescan music") }
 
             HorizontalDivider()
             Header("Downloader")
@@ -113,7 +119,8 @@ fun SettingsScreen() {
             Toggle("Download whole playlists", "When you paste a playlist link, get every song in it", playlists) { playlists = it; Prefs.downloadPlaylists = it }
             Text("Engine: yt-dlp ${version ?: "(starts on first use)"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedButton(
-                { scope.launch { updateMsg = "Updating…"; updateMsg = Downloader.updateEngine() } },
+                colors = seaButton(),
+                onClick = { scope.launch { updateMsg = "Updating…"; updateMsg = Downloader.updateEngine() } },
                 enabled = engine != EngineState.UPDATING && engine != EngineState.STARTING,
             ) { Text("Update downloader") }
             Text(updateMsg ?: "Updates itself every few days. Tap this if downloads stop working.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -129,7 +136,7 @@ fun SettingsScreen() {
 }
 
 @Composable
-private fun Header(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
+private fun Header(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, color = if (LocalWater.current) Color.White else MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
 
 @Composable
 private fun Toggle(title: String, sub: String, value: Boolean, onChange: (Boolean) -> Unit) {
@@ -138,6 +145,16 @@ private fun Toggle(title: String, sub: String, value: Boolean, onChange: (Boolea
             Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(value, onChange)
+        Switch(
+            value, onChange,
+            colors = if (LocalWater.current) SwitchDefaults.colors(
+                checkedThumbColor = Sea.Cream, checkedTrackColor = Sea.Blue, checkedBorderColor = Sea.Blue,
+                uncheckedThumbColor = Sea.Muted, uncheckedTrackColor = Sea.RowBg, uncheckedBorderColor = Sea.Muted,
+            ) else SwitchDefaults.colors(),
+        )
     }
 }
+
+@Composable
+private fun seaButton() = if (LocalWater.current) ButtonDefaults.outlinedButtonColors(containerColor = Sea.Cream, contentColor = Sea.Blue)
+else ButtonDefaults.outlinedButtonColors()
