@@ -220,8 +220,11 @@ fun HeroScene(modifier: Modifier = Modifier) {
                 strokes(listOf("M306 170 V120", "M306 146 C296 140 292 128 292 114", "M306 134 C316 128 320 116 320 102", "M320 118 C328 114 330 106 330 98"), Sea.BlueCoral, 7f)
             }
             brainCoral(250f, 170f, 16f, t)
-            bubbles(t, listOf(Triple(96f, 60f, 6f), Triple(110f, 44f, 8f), Triple(104f, 26f, 4f)))
-            swim(t, 4f) { at(128f, 52f) { blueFish() } }
+            // bubbles come out of the fish's mouth and swim along with it
+            swim(t, 4f) {
+                at(128f, 52f) { blueFish() }
+                bubbles(t, listOf(Triple(244f, 76f, 4f), Triple(252f, 58f, 6f), Triple(246f, 38f, 5f)))
+            }
             swim(t, 3f, 1.5f) { at(206f, 120f, 0.5f) { smallFish(Sea.Yellow, Sea.YellowFin) } }
         }
     }
@@ -248,8 +251,10 @@ fun CoverScene(modifier: Modifier = Modifier) {
             }
             brainCoral(210f, 300f, 26f, t)
             drawOval(Sea.Cream, Offset(118f, 291f), Size(32f, 22f)); drawCircle(Sea.Blue, 6.5f, Offset(134f, 293f))
-            bubbles(t, listOf(Triple(248f, 96f, 8f), Triple(264f, 72f, 11f), Triple(256f, 46f, 6f)))
-            swim(t, 4f) { at(70f, 104f, 1.75f) { blueFish() } }
+            swim(t, 4f) {
+                at(70f, 104f, 1.75f) { blueFish() }
+                bubbles(t, listOf(Triple(272f, 150f, 6f), Triple(284f, 120f, 9f), Triple(276f, 90f, 7f)))
+            }
             swim(t, 3f, 1.5f) { at(224f, 200f, 0.42f) { smallFish(Sea.Yellow, Sea.YellowFin) } }
         }
     }
