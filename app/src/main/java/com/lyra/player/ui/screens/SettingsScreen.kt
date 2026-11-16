@@ -2,6 +2,9 @@ package com.lyra.player.ui.screens
 
 import com.lyra.player.ui.theme.LocalWater
 import com.lyra.player.ui.theme.Sea
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Color
@@ -70,14 +73,19 @@ fun SettingsScreen() {
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton({ actions.nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-            Text("Settings", style = MaterialTheme.typography.titleLarge)
+            IconButton({ actions.nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = if (LocalWater.current) Sea.Navy else androidx.compose.material3.LocalContentColor.current) }
+            Text("Settings", style = if (LocalWater.current) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.titleLarge, color = if (LocalWater.current) Color.White else Color.Unspecified)
         }
-        Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        val water = LocalWater.current
+        Column(
+            if (water) Modifier.padding(start = 12.dp, end = 12.dp, bottom = 16.dp).clip(RoundedCornerShape(28.dp)).background(Sea.Cream).padding(horizontal = 16.dp, vertical = 12.dp)
+            else Modifier.padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Header("Look")
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 ThemeMode.entries.forEachIndexed { i, m ->
-                    SegmentedButton(theme == m, { Prefs.setTheme(m) }, SegmentedButtonDefaults.itemShape(i, ThemeMode.entries.size)) {
+                    SegmentedButton(theme == m, { Prefs.setTheme(m) }, SegmentedButtonDefaults.itemShape(i, ThemeMode.entries.size), colors = if (water) SegmentedButtonDefaults.colors(activeContainerColor = Sea.Tile, activeContentColor = Sea.Navy, inactiveContainerColor = Sea.Cream, inactiveContentColor = Sea.Navy, activeBorderColor = Sea.Blue, inactiveBorderColor = Sea.Blue) else SegmentedButtonDefaults.colors()) {
                         Text(when (m) { ThemeMode.WATER -> "Water"; ThemeMode.SYSTEM -> "Auto"; ThemeMode.DARK -> "Dark"; ThemeMode.LIGHT -> "Light" })
                     }
                 }
@@ -136,7 +144,7 @@ fun SettingsScreen() {
 }
 
 @Composable
-private fun Header(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, color = if (LocalWater.current) Color.White else MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
+private fun Header(t: String) = Text(t, style = MaterialTheme.typography.titleMedium, color = if (LocalWater.current) Sea.Blue else MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
 
 @Composable
 private fun Toggle(title: String, sub: String, value: Boolean, onChange: (Boolean) -> Unit) {
@@ -156,5 +164,5 @@ private fun Toggle(title: String, sub: String, value: Boolean, onChange: (Boolea
 }
 
 @Composable
-private fun seaButton() = if (LocalWater.current) ButtonDefaults.outlinedButtonColors(containerColor = Sea.Cream, contentColor = Sea.Blue)
+private fun seaButton() = if (LocalWater.current) ButtonDefaults.outlinedButtonColors(containerColor = Sea.Tile, contentColor = Sea.Navy)
 else ButtonDefaults.outlinedButtonColors()
