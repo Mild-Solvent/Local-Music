@@ -1,5 +1,10 @@
 package com.lyra.player.ui
 
+import com.lyra.player.ui.theme.FishTile
+import com.lyra.player.ui.theme.LocalWater
+import com.lyra.player.ui.theme.RoundStar
+import com.lyra.player.ui.theme.RoundStarOutline
+import com.lyra.player.ui.theme.Sea
 import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -103,17 +108,19 @@ fun ArtImage(
     seed: String = "",
     icon: ImageVector = Icons.Filled.MusicNote,
     url: String? = null,
+    fallback: (@Composable () -> Unit)? = null,
 ) {
     val m = (if (size != null) modifier.size(size) else modifier).clip(shape)
     val ctx = LocalContext.current
     val data: Any? = url ?: uri
+    val water = LocalWater.current
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(ctx).data(data).crossfade(true).build(),
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = m,
-        loading = { Placeholder(seed, icon) },
-        error = { Placeholder(seed, icon) },
+        loading = { if (fallback != null) fallback() else if (water) FishTile(seed, Modifier.fillMaxSize()) else Placeholder(seed, icon) },
+        error = { if (fallback != null) fallback() else if (water) FishTile(seed, Modifier.fillMaxSize()) else Placeholder(seed, icon) },
     )
 }
 
@@ -162,11 +169,16 @@ fun SongRow(
     val actions = LocalActions.current
     val ps by PlayerConnection.state.collectAsState()
     val isCurrent = ps.current?.id == song.id
+    val water = LocalWater.current
     Row(
         modifier
             .fillMaxWidth()
+            .then(
+                if (water) Modifier.padding(horizontal = 12.dp, vertical = 4.dp).clip(RoundedCornerShape(20.dp)).background(if (isCurrent) Sea.Cream else Sea.RowBg)
+                else Modifier
+            )
             .combinedClickable(onClick = onClick, onLongClick = { actions.showMenu(menu) })
-            .padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+            .padding(start = if (water) 7.dp else 16.dp, end = 4.dp, top = if (water) 7.dp else 6.dp, bottom = if (water) 7.dp else 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leadingNumber != null) {
@@ -177,8 +189,9 @@ fun SongRow(
             Spacer(Modifier.width(8.dp))
         } else if (showArt) {
             Box(contentAlignment = Alignment.Center) {
-                ArtImage(song.artUri, size = 50.dp, seed = song.album)
-                if (isCurrent) Box(Modifier.size(50.dp).clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
+                val artShape = RoundedCornerShape(if (water) 15.dp else 8.dp)
+                ArtImage(song.artUri, size = 50.dp, seed = song.album, shape = artShape)
+                if (isCurrent) Box(Modifier.size(50.dp).clip(artShape).background(Color.Black.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
                     PlayingBars(ps.isPlaying, color = Color.White)
                 }
             }
@@ -198,7 +211,7 @@ fun SongRow(
         }
         if (trailing != null) trailing()
         IconButton(onClick = { actions.showMenu(menu) }) {
-            Icon(Icons.Filled.MoreVert, "More", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Filled.MoreVert, "More", tint = if (water) Sea.Blue else MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -370,7 +383,7 @@ fun SongPickerDialog(exclude: Set<Long>, onDismiss: () -> Unit, onPicked: (List<
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     Row(modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 20.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+        Text(text, style = MaterialTheme.typography.titleLarge, color = if (LocalWater.current) Color.White else Color.Unspecified, modifier = Modifier.weight(1f))
         action?.invoke()
     }
 }
@@ -413,14 +426,15 @@ fun MiniPlayer(onOpen: () -> Unit) {
         }
     }
     val scale by animateFloatAsState(if (ps.isPlaying) 1f else 0.92f, label = "art")
+    val water = LocalWater.current
     Surface(
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp).clickable(onClick = onOpen),
+        color = if (water) Sea.Cream else MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(if (water) 20.dp else 14.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = if (water) 12.dp else 8.dp, vertical = 4.dp).clickable(onClick = onOpen),
     ) {
         Column {
             Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                ArtImage(song.artUri, size = 44.dp, seed = song.album, modifier = Modifier.padding((44 * (1 - scale) / 2).dp))
+                ArtImage(song.artUri, size = 44.dp, seed = song.album, shape = RoundedCornerShape(if (water) 14.dp else 8.dp), modifier = Modifier.padding((44 * (1 - scale) / 2).dp))
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(song.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.basicMarquee())
@@ -428,18 +442,25 @@ fun MiniPlayer(onOpen: () -> Unit) {
                 }
                 val liked = LibraryStore.data.collectAsState().value.favorites.contains(song.id)
                 IconButton({ LibraryStore.toggleFavorite(song.id) }) {
-                    Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, "Like", tint = if (liked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (water) Icon(if (liked) RoundStar else RoundStarOutline, "Like", tint = Sea.Star)
+                    else Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, "Like", tint = if (liked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                IconButton({ PlayerConnection.togglePlay() }) {
+                if (water) {
+                    Box(Modifier.size(44.dp).clip(CircleShape).background(Sea.Blue).clickable { PlayerConnection.togglePlay() }, contentAlignment = Alignment.Center) {
+                        Icon(if (ps.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (ps.isPlaying) "Pause" else "Play", Modifier.size(26.dp), tint = Sea.Cream)
+                    }
+                } else IconButton({ PlayerConnection.togglePlay() }) {
                     Icon(if (ps.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (ps.isPlaying) "Pause" else "Play", Modifier.size(30.dp))
                 }
-                IconButton({ PlayerConnection.next() }) { Icon(Icons.Filled.SkipNext, "Next") }
+                IconButton({ PlayerConnection.next() }) { Icon(Icons.Filled.SkipNext, "Next", tint = if (water) Sea.Blue else androidx.compose.material3.LocalContentColor.current) }
             }
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(2.dp).padding(horizontal = 12.dp),
                 drawStopIndicator = {},
                 gapSize = 0.dp,
+                color = if (water) Sea.Blue else androidx.compose.material3.ProgressIndicatorDefaults.linearColor,
+                trackColor = if (water) Sea.Tile else androidx.compose.material3.ProgressIndicatorDefaults.linearTrackColor,
             )
         }
     }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class ThemeMode { SYSTEM, DARK, LIGHT }
+enum class ThemeMode { WATER, SYSTEM, DARK, LIGHT }
 enum class SongSort(val label: String) { TITLE("Title"), ARTIST("Artist"), ALBUM("Album"), DATE_ADDED("Recently added"), DURATION("Length") }
 enum class AudioFormat(val label: String) { M4A("M4A (best quality, fast)"), MP3("MP3 (works everywhere)"), OPUS("Opus (smallest files)") }
 
@@ -14,7 +14,7 @@ enum class AudioFormat(val label: String) { M4A("M4A (best quality, fast)"), MP3
 object Prefs {
     private lateinit var sp: SharedPreferences
 
-    private val _theme = MutableStateFlow(ThemeMode.SYSTEM)
+    private val _theme = MutableStateFlow(ThemeMode.WATER)
     val theme: StateFlow<ThemeMode> = _theme.asStateFlow()
     private val _dynamicColor = MutableStateFlow(false)
     val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
@@ -23,7 +23,9 @@ object Prefs {
 
     fun init(context: Context) {
         sp = context.getSharedPreferences("lyra", Context.MODE_PRIVATE)
-        _theme.value = runCatching { ThemeMode.valueOf(sp.getString("theme", null)!!) }.getOrDefault(ThemeMode.SYSTEM)
+        // 1.1.0 brought the water theme: switch everyone to it once, after that her choice sticks.
+        if (!sp.getBoolean("water_theme_v1", false)) sp.edit().putString("theme", ThemeMode.WATER.name).putBoolean("water_theme_v1", true).apply()
+        _theme.value = runCatching { ThemeMode.valueOf(sp.getString("theme", null)!!) }.getOrDefault(ThemeMode.WATER)
         _dynamicColor.value = sp.getBoolean("dynamic_color", false)
         _sort.value = runCatching { SongSort.valueOf(sp.getString("sort", null)!!) }.getOrDefault(SongSort.TITLE)
     }

@@ -1,6 +1,21 @@
 package com.lyra.player.ui.screens
 
-import androidx.compose.animation.core.animateFloatAsState
+import com.lyra.player.ui.theme.Backdrop
+import com.lyra.player.ui.theme.CoverScene
+import com.lyra.player.ui.theme.FishThumb
+import com.lyra.player.ui.theme.LocalWater
+import com.lyra.player.ui.theme.OceanBackdrop
+import com.lyra.player.ui.theme.RoundStar
+import com.lyra.player.ui.theme.RoundStarOutline
+import com.lyra.player.ui.theme.Sea
+import com.lyra.player.ui.theme.SeabedStrip
+import com.lyra.player.ui.theme.WavyTrack
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.ButtonDefaults
+androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -107,21 +122,32 @@ fun PlayerScreen() {
     val liked = song.id in data.favorites
     val artScale by animateFloatAsState(if (ps.isPlaying) 1f else 0.86f, label = "art")
     val bg = MaterialTheme.colorScheme.primaryContainer
+    val water = LocalWater.current
+    val dim = if (water) Sea.Muted else MaterialTheme.colorScheme.onSurfaceVariant
+    val on = if (water) Sea.Blue else MaterialTheme.colorScheme.primary
 
     Box(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(bg, MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)))
+        Modifier.fillMaxSize().then(
+            if (water) Modifier else Modifier.background(Brush.verticalGradient(listOf(bg, MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)))
+        )
     ) {
+        if (water) {
+            OceanBackdrop(Backdrop.PLAYER, Modifier.fillMaxSize())
+            SeabedStrip(Modifier.align(Alignment.BottomCenter).fillMaxWidth().aspectRatio(390f / 70f))
+        }
         Column(
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton({ actions.nav.popBackStack() }) { Icon(Icons.Filled.KeyboardArrowDown, "Close", Modifier.size(32.dp)) }
+                if (water) SeaBox({ actions.nav.popBackStack() }, 44.dp, 16.dp, Sea.Cream, "Close", Icons.Filled.KeyboardArrowDown, Sea.Blue, 30.dp)
+                else IconButton({ actions.nav.popBackStack() }) { Icon(Icons.Filled.KeyboardArrowDown, "Close", Modifier.size(32.dp)) }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("PLAYING FROM YOUR LIBRARY", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("PLAYING FROM YOUR LIBRARY", style = MaterialTheme.typography.labelSmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(song.album, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                IconButton({ actions.showMenu(SongMenu(song)) }) { Icon(Icons.Filled.MoreVert, "More") }
+                if (water) SeaBox({ actions.showMenu(SongMenu(song)) }, 44.dp, 16.dp, Sea.Cream, "More", Icons.Filled.MoreVert, Sea.Blue, 24.dp)
+                else IconButton({ actions.showMenu(SongMenu(song)) }) { Icon(Icons.Filled.MoreVert, "More") }
             }
             Spacer(Modifier.weight(0.6f))
             // Swipe the cover left/right to change song
@@ -135,7 +161,10 @@ fun PlayerScreen() {
                 },
                 contentAlignment = Alignment.Center,
             ) {
-                ArtImage(
+                if (water) ArtImage(
+                    song.artUri, Modifier.fillMaxSize().scale(artScale),
+                    seed = song.album, shape = RoundedCornerShape(40.dp), fallback = { CoverScene(Modifier.fillMaxSize()) },
+                ) else ArtImage(
                     song.artUri, Modifier.fillMaxSize().scale(artScale).shadow(24.dp, RoundedCornerShape(20.dp)),
                     seed = song.album, shape = RoundedCornerShape(20.dp),
                 )
@@ -143,13 +172,14 @@ fun PlayerScreen() {
             Spacer(Modifier.weight(0.6f))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(song.title, style = MaterialTheme.typography.headlineSmall, maxLines = 1, modifier = Modifier.basicMarquee())
+                    Text(song.title, style = if (water) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineSmall, color = if (water) Color.White else Color.Unspecified, maxLines = 1, modifier = Modifier.basicMarquee())
                     Text(
-                        song.artist, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                        song.artist, style = MaterialTheme.typography.titleMedium, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
                         modifier = Modifier.basicMarquee(),
                     )
                 }
-                IconButton({ LibraryStore.toggleFavorite(song.id) }) {
+                if (water) SeaBox({ LibraryStore.toggleFavorite(song.id) }, 48.dp, 16.dp, Sea.Cream, if (liked) "Unlike" else "Like", if (liked) RoundStar else RoundStarOutline, Sea.Star, 26.dp)
+                else IconButton({ LibraryStore.toggleFavorite(song.id) }) {
                     Icon(
                         if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, if (liked) "Unlike" else "Like",
                         tint = if (liked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(28.dp),
@@ -163,48 +193,68 @@ fun PlayerScreen() {
                 onValueChange = { dragging = true; dragValue = it },
                 onValueChangeFinished = { PlayerConnection.seekTo((dragValue * dur).toLong()); position = (dragValue * dur).toLong(); dragging = false },
                 colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface, activeTrackColor = MaterialTheme.colorScheme.onSurface, inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)),
+                thumb = { if (water) FishThumb(Modifier.size(width = 38.dp, height = 22.dp)) else SliderDefaults.Thumb(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.onSurface)) },
+                track = { st ->
+                    val frac = (st.value - st.valueRange.start) / (st.valueRange.endInclusive - st.valueRange.start)
+                    if (water) WavyTrack(frac, Modifier.fillMaxWidth().height(30.dp))
+                    else SliderDefaults.Track(st, colors = SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.onSurface, inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f)))
+                },
             )
             Row(Modifier.fillMaxWidth()) {
-                Text(formatDuration(if (dragging) (dragValue * dur).toLong() else position), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatDuration(if (dragging) (dragValue * dur).toLong() else position), style = MaterialTheme.typography.bodySmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.weight(1f))
-                Text(formatDuration(ps.duration), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(formatDuration(ps.duration), style = MaterialTheme.typography.bodySmall, color = if (water) Sea.Navy else MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                IconButton({ PlayerConnection.toggleShuffle() }) {
-                    Icon(Icons.Filled.Shuffle, "Shuffle", tint = if (ps.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                IconButton({ PlayerConnection.previous() }, Modifier.size(56.dp)) { Icon(Icons.Filled.SkipPrevious, "Previous", Modifier.size(40.dp)) }
-                FilledIconButton(
-                    { PlayerConnection.togglePlay() }, Modifier.size(76.dp), shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.onSurface, contentColor = MaterialTheme.colorScheme.surface),
-                ) { Icon(if (ps.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (ps.isPlaying) "Pause" else "Play", Modifier.size(44.dp)) }
-                IconButton({ PlayerConnection.next() }, Modifier.size(56.dp)) { Icon(Icons.Filled.SkipNext, "Next", Modifier.size(40.dp)) }
-                IconButton({ PlayerConnection.cycleRepeat() }) {
-                    Icon(
-                        if (ps.repeatMode == Player.REPEAT_MODE_ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
+                if (water) {
+                    SeaBox({ PlayerConnection.toggleShuffle() }, 48.dp, 16.dp, if (ps.shuffle) Sea.Cream else Sea.Tile, "Shuffle", Icons.Filled.Shuffle, if (ps.shuffle) Sea.Blue else Sea.Muted, 24.dp)
+                    SeaBox({ PlayerConnection.previous() }, 58.dp, 20.dp, Sea.Cream, "Previous", Icons.Filled.SkipPrevious, Sea.Blue, 34.dp)
+                    SeaBox({ PlayerConnection.togglePlay() }, 82.dp, 28.dp, Sea.Blue, if (ps.isPlaying) "Pause" else "Play", if (ps.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, Sea.Cream, 44.dp)
+                    SeaBox({ PlayerConnection.next() }, 58.dp, 20.dp, Sea.Cream, "Next", Icons.Filled.SkipNext, Sea.Blue, 34.dp)
+                    SeaBox(
+                        { PlayerConnection.cycleRepeat() }, 48.dp, 16.dp, if (ps.repeatMode != Player.REPEAT_MODE_OFF) Sea.Cream else Sea.Tile,
                         when (ps.repeatMode) { Player.REPEAT_MODE_ALL -> "Repeat all"; Player.REPEAT_MODE_ONE -> "Repeat one"; else -> "Repeat off" },
-                        tint = if (ps.repeatMode != Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        if (ps.repeatMode == Player.REPEAT_MODE_ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
+                        if (ps.repeatMode != Player.REPEAT_MODE_OFF) Sea.Blue else Sea.Muted, 24.dp,
                     )
+                } else {
+                    IconButton({ PlayerConnection.toggleShuffle() }) {
+                        Icon(Icons.Filled.Shuffle, "Shuffle", tint = if (ps.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton({ PlayerConnection.previous() }, Modifier.size(56.dp)) { Icon(Icons.Filled.SkipPrevious, "Previous", Modifier.size(40.dp)) }
+                    FilledIconButton(
+                        { PlayerConnection.togglePlay() }, Modifier.size(76.dp), shape = CircleShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.onSurface, contentColor = MaterialTheme.colorScheme.surface),
+                    ) { Icon(if (ps.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (ps.isPlaying) "Pause" else "Play", Modifier.size(44.dp)) }
+                    IconButton({ PlayerConnection.next() }, Modifier.size(56.dp)) { Icon(Icons.Filled.SkipNext, "Next", Modifier.size(40.dp)) }
+                    IconButton({ PlayerConnection.cycleRepeat() }) {
+                        Icon(
+                            if (ps.repeatMode == Player.REPEAT_MODE_ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
+                            when (ps.repeatMode) { Player.REPEAT_MODE_ALL -> "Repeat all"; Player.REPEAT_MODE_ONE -> "Repeat one"; else -> "Repeat off" },
+                            tint = if (ps.repeatMode != Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(4.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 IconButton({ showSleep = true }) {
-                    Icon(Icons.Filled.Bedtime, "Sleep timer", tint = if (sleep.endsAt != null || sleep.endOfSong) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Filled.Bedtime, "Sleep timer", tint = if (sleep.endsAt != null || sleep.endOfSong) MaterialTheme.colorScheme.primary else dim)
                 }
-                IconButton({ PlayerConnection.seekBy(-10_000) }) { Icon(Icons.Filled.Replay10, "Back 10 seconds", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+                IconButton({ PlayerConnection.seekBy(-10_000) }) { Icon(Icons.Filled.Replay10, "Back 10 seconds", tint = dim) }
                 TextButton({ showSpeed = true }) {
-                    Icon(Icons.Filled.Speed, null, tint = if (ps.speed != 1f || ps.pitch != 1f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Filled.Speed, null, tint = if (ps.speed != 1f || ps.pitch != 1f) on else dim)
                     Spacer(Modifier.width(4.dp))
-                    Text("${"%.2f".format(ps.speed).trimEnd('0').trimEnd('.')}×", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${"%.2f".format(ps.speed).trimEnd('0').trimEnd('.')}×", color = dim)
                 }
-                IconButton({ PlayerConnection.seekBy(10_000) }) { Icon(Icons.Filled.Forward10, "Forward 10 seconds", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
-                IconButton({ actions.nav.navigate("equalizer") }) { Icon(Icons.Filled.Equalizer, "Equalizer", tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+                IconButton({ PlayerConnection.seekBy(10_000) }) { Icon(Icons.Filled.Forward10, "Forward 10 seconds", tint = dim) }
+                IconButton({ actions.nav.navigate("equalizer") }) { Icon(Icons.Filled.Equalizer, "Equalizer", tint = dim) }
             }
             Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton({ addTo = true }) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null); Spacer(Modifier.width(6.dp)); Text("Add to playlist") }
-                TextButton({ actions.nav.navigate("queue") }) { Icon(Icons.AutoMirrored.Filled.QueueMusic, null); Spacer(Modifier.width(6.dp)); Text("Up next") }
+                val pill = if (water) ButtonDefaults.textButtonColors(containerColor = Sea.Tile, contentColor = Sea.Navy) else ButtonDefaults.textButtonColors()
+                TextButton({ addTo = true }, colors = pill) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null); Spacer(Modifier.width(6.dp)); Text("Add to playlist") }
+                TextButton({ actions.nav.navigate("queue") }, colors = pill) { Icon(Icons.AutoMirrored.Filled.QueueMusic, null); Spacer(Modifier.width(6.dp)); Text("Up next") }
             }
             SleepLabel(sleep)
         }
@@ -274,4 +324,12 @@ private fun SpeedDialog(speed: Float, pitch: Float, onDismiss: () -> Unit) {
         },
         confirmButton = { TextButton(onDismiss) { Text("Done") } },
     )
+}
+
+@Composable
+private fun SeaBox(onClick: () -> Unit, size: Dp, radius: Dp, bg: Color, desc: String?, icon: ImageVector, tint: Color, iconSize: Dp) {
+    Box(
+        Modifier.size(size).clip(RoundedCornerShape(radius)).background(bg).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, desc, Modifier.size(iconSize), tint = tint) }
 }

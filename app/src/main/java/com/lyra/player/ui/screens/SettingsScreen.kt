@@ -72,7 +72,7 @@ fun SettingsScreen() {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 ThemeMode.entries.forEachIndexed { i, m ->
                     SegmentedButton(theme == m, { Prefs.setTheme(m) }, SegmentedButtonDefaults.itemShape(i, ThemeMode.entries.size)) {
-                        Text(when (m) { ThemeMode.SYSTEM -> "Auto"; ThemeMode.DARK -> "Dark"; ThemeMode.LIGHT -> "Light" })
+                        Text(when (m) { ThemeMode.WATER -> "Water"; ThemeMode.SYSTEM -> "Auto"; ThemeMode.DARK -> "Dark"; ThemeMode.LIGHT -> "Light" })
                     }
                 }
             }

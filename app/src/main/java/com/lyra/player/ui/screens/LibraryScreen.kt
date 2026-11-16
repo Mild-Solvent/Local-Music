@@ -1,5 +1,11 @@
 package com.lyra.player.ui.screens
 
+import com.lyra.player.ui.theme.LocalWater
+import com.lyra.player.ui.theme.Sea
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -82,11 +88,27 @@ fun LibraryScreen() {
     val pager = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxSize()) {
+        val water = LocalWater.current
         Text(
-            "Your library", style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+            "Your library", style = if (water) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium,
+            color = if (water) Color.White else Color.Unspecified,
+            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(start = if (water) 20.dp else 16.dp, top = 16.dp, bottom = 8.dp),
         )
-        PrimaryScrollableTabRow(selectedTabIndex = pager.currentPage, edgePadding = 8.dp, containerColor = Color.Transparent) {
+        if (water) {
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                tabs.forEachIndexed { i, t ->
+                    val sel = pager.currentPage == i
+                    Box(
+                        Modifier.height(40.dp).clip(RoundedCornerShape(14.dp)).background(if (sel) Sea.Cream else Sea.Tile)
+                            .clickable { scope.launch { pager.animateScrollToPage(i) } }.padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(t, style = MaterialTheme.typography.titleSmall, color = if (sel) Sea.Blue else Sea.Navy) }
+                }
+            }
+        } else PrimaryScrollableTabRow(selectedTabIndex = pager.currentPage, edgePadding = 8.dp, containerColor = Color.Transparent) {
             tabs.forEachIndexed { i, t ->
                 Tab(selected = pager.currentPage == i, onClick = { scope.launch { pager.animateScrollToPage(i) } }, text = { Text(t) })
             }

@@ -21,6 +21,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
@@ -216,9 +219,15 @@ class MainActivity : ComponentActivity() {
         val route = entry?.destination?.route?.substringBefore('?') ?: "home"
         val fullScreen = route == "player" || route == "queue" || route == "equalizer"
 
+        val water = com.lyra.player.ui.theme.LocalWater.current
         CompositionLocalProvider(LocalActions provides actions) {
+            androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+            if (water) com.lyra.player.ui.theme.OceanBackdrop(
+                when (route) { "home" -> com.lyra.player.ui.theme.Backdrop.HOME; "library" -> com.lyra.player.ui.theme.Backdrop.LIBRARY; else -> com.lyra.player.ui.theme.Backdrop.PLAIN },
+                Modifier.fillMaxSize(),
+            )
             Scaffold(
-                containerColor = MaterialTheme.colorScheme.background,
+                containerColor = if (water) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.background,
                 contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
                 bottomBar = {
                     if (!fullScreen) Column {
@@ -259,6 +268,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+            }
             menu?.let { m -> SongMenuSheet(m, onDismiss = { menu = null }) }
         }
     }
@@ -274,10 +284,24 @@ class MainActivity : ComponentActivity() {
         )
         val active by Downloader.tasks.collectAsState()
         val running = active.count { it.active }
-        NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+        val water = com.lyra.player.ui.theme.LocalWater.current
+        val bar: @Composable (@Composable androidx.compose.foundation.layout.RowScope.() -> Unit) -> Unit = { items ->
+            if (water) androidx.compose.material3.Surface(
+                color = com.lyra.player.ui.theme.Sea.Cream, shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp),
+                modifier = Modifier.windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars).padding(start = 12.dp, end = 12.dp, bottom = 10.dp, top = 2.dp),
+            ) { NavigationBar(containerColor = androidx.compose.ui.graphics.Color.Transparent, tonalElevation = 0.dp, windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0), content = items) }
+            else NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, content = items)
+        }
+        val itemColors = if (water) androidx.compose.material3.NavigationBarItemDefaults.colors(
+            selectedIconColor = com.lyra.player.ui.theme.Sea.Blue, selectedTextColor = com.lyra.player.ui.theme.Sea.Blue,
+            indicatorColor = com.lyra.player.ui.theme.Sea.Tile,
+            unselectedIconColor = com.lyra.player.ui.theme.Sea.Muted, unselectedTextColor = com.lyra.player.ui.theme.Sea.Muted,
+        ) else androidx.compose.material3.NavigationBarItemDefaults.colors()
+        bar {
             tabs.forEach { t ->
                 val selected = route == t.route
                 NavigationBarItem(
+                    colors = itemColors,
                     selected = selected,
                     onClick = {
                         nav.navigate(t.route) {

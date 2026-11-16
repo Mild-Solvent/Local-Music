@@ -9,6 +9,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
+import com.lyra.player.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -73,9 +79,67 @@ private val Type = Typography().let { t ->
     )
 }
 
+// ---- Cute water theme ----
+private val Water = lightColorScheme(
+    primary = Color(0xFF2470DF),
+    onPrimary = Color(0xFFFAF2E0),
+    primaryContainer = Color(0xFF74D0E0),
+    onPrimaryContainer = Color(0xFF08294F),
+    inversePrimary = Color(0xFF74D0E0),
+    secondary = Color(0xFF1B4FA8),
+    onSecondary = Color(0xFFFAF2E0),
+    secondaryContainer = Color(0xFFFAF2E0),
+    onSecondaryContainer = Color(0xFF2470DF),
+    tertiary = Color(0xFFF6C445),
+    onTertiary = Color(0xFF08294F),
+    tertiaryContainer = Color(0xFFF8DC79),
+    onTertiaryContainer = Color(0xFF08294F),
+    background = Color(0xFF049DEB),
+    onBackground = Color(0xFF08294F),
+    surface = Color(0xFF049DEB),
+    onSurface = Color(0xFF08294F),
+    surfaceVariant = Color(0xFFCBE6E1),
+    onSurfaceVariant = Color(0xFF0A2B55),
+    surfaceTint = Color.Transparent,
+    inverseSurface = Color(0xFF08294F),
+    inverseOnSurface = Color(0xFFFAF2E0),
+    surfaceBright = Color(0xFFFFFBF0),
+    surfaceDim = Color(0xFFCBE6E1),
+    surfaceContainerLowest = Color(0xFFFFFBF0),
+    surfaceContainerLow = Color(0xFFFAF2E0),
+    surfaceContainer = Color(0xFFFAF2E0),
+    surfaceContainerHigh = Color(0xFFF3EBD6),
+    surfaceContainerHighest = Color(0xFFCBE6E1),
+    outline = Color(0xFF2470DF),
+    outlineVariant = Color(0xFF74D0E0),
+    error = Color(0xFFB3261E),
+)
+
+@OptIn(ExperimentalTextApi::class)
+private fun vf(res: Int, w: Int) = Font(res, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
+
+private val Fredoka = FontFamily(vf(R.font.fredoka, 500), vf(R.font.fredoka, 600), vf(R.font.fredoka, 700))
+private val Nunito = FontFamily(vf(R.font.nunito, 400), vf(R.font.nunito, 600), vf(R.font.nunito, 700), vf(R.font.nunito, 800))
+
+private val WaterType = Typography().let { t ->
+    fun TextStyle.round(w: Int) = copy(fontFamily = Fredoka, fontWeight = FontWeight(w))
+    fun TextStyle.soft(w: Int) = copy(fontFamily = Nunito, fontWeight = FontWeight(w))
+    t.copy(
+        displayLarge = t.displayLarge.round(700), displayMedium = t.displayMedium.round(700), displaySmall = t.displaySmall.round(700),
+        headlineLarge = t.headlineLarge.round(700), headlineMedium = t.headlineMedium.round(700), headlineSmall = t.headlineSmall.round(700),
+        titleLarge = t.titleLarge.round(600), titleMedium = t.titleMedium.soft(800), titleSmall = t.titleSmall.soft(800),
+        bodyLarge = t.bodyLarge.soft(700), bodyMedium = t.bodyMedium.soft(700), bodySmall = t.bodySmall.soft(700),
+        labelLarge = t.labelLarge.soft(800), labelMedium = t.labelMedium.soft(800), labelSmall = t.labelSmall.soft(800),
+    )
+}
+
 @Composable
 fun LyraTheme(mode: ThemeMode, dynamic: Boolean, content: @Composable () -> Unit) {
-    val dark = when (mode) { ThemeMode.SYSTEM -> isSystemInDarkTheme(); ThemeMode.DARK -> true; ThemeMode.LIGHT -> false }
+    if (mode == ThemeMode.WATER) {
+        CompositionLocalProvider(LocalWater provides true) { MaterialTheme(colorScheme = Water, typography = WaterType, content = content) }
+        return
+    }
+    val dark = when (mode) { ThemeMode.SYSTEM, ThemeMode.WATER -> isSystemInDarkTheme(); ThemeMode.DARK -> true; ThemeMode.LIGHT -> false }
     val ctx = LocalContext.current
     val scheme = when {
         dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
