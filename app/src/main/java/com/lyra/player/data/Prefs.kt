@@ -59,6 +59,9 @@ object Prefs {
     var lastUpdateCheck: Long
         get() = sp.getLong("update_checked", 0L)
         set(v) = sp.edit().putLong("update_checked", v).apply()
+    var lastUpdateCheckVersion: Int
+        get() = sp.getInt("update_checked_vc", 0)
+        set(v) = sp.edit().putInt("update_checked_vc", v).apply()
     /** Version she tapped "Later" on, so the pop-up doesn't nag about it again. */
     var snoozedVersion: Int
         get() = sp.getInt("update_snoozed", 0)

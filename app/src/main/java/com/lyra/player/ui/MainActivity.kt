@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
@@ -107,7 +108,17 @@ class MainActivity : ComponentActivity() {
             val theme by Prefs.theme.collectAsState()
             val dynamic by Prefs.dynamicColor.collectAsState()
             val waterDark by Prefs.waterDark.collectAsState()
-            LyraTheme(theme, dynamic, waterDark) { Root() }
+            LyraTheme(theme, dynamic, waterDark) {
+                // Status bar icons: light icons on dark backgrounds, dark icons on light ones
+                val darkUi = androidx.compose.material3.MaterialTheme.colorScheme.background.luminance() < 0.3f
+                androidx.compose.runtime.SideEffect {
+                    androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).apply {
+                        isAppearanceLightStatusBars = !darkUi
+                        isAppearanceLightNavigationBars = !darkUi
+                    }
+                }
+                Root()
+            }
         }
     }
 
@@ -144,6 +155,7 @@ class MainActivity : ComponentActivity() {
             launcher.launch(perms.toTypedArray())
         }
         androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
+            com.lyra.player.update.Updater.onResume(this@MainActivity)
             if (hasAudioPermission()) granted = true
             onPauseOrDispose { }
         }
@@ -232,6 +244,7 @@ class MainActivity : ComponentActivity() {
             )
             Scaffold(
                 containerColor = if (water) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.background,
+                contentColor = MaterialTheme.colorScheme.onBackground,
                 contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
                 bottomBar = {
                     if (!fullScreen) Column {

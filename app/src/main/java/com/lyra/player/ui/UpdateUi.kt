@@ -42,10 +42,7 @@ fun UpdatePrompt() {
     )
 }
 
-private fun startUpdate(ctx: android.content.Context, rel: Updater.Release) {
-    if (!Updater.canInstall(ctx)) { Updater.openInstallPermission(ctx); return }
-    Updater.downloadAndInstall(ctx, rel)
-}
+private fun startUpdate(ctx: android.content.Context, rel: Updater.Release) = Updater.start(ctx, rel)
 
 /** The "Updates" block in Settings: current version, a check button, progress and errors. */
 @Composable
@@ -64,7 +61,7 @@ fun UpdateSection() {
                 Spacer(Modifier.height(6.dp))
                 Button({ startUpdate(ctx, s.release) }) { Text("Update now") }
                 if (!Updater.canInstall(ctx)) Text(
-                    "The first time, Android asks you to allow Muzza to install updates. Turn it on, come back and tap Update again.",
+                    "The first time, Android asks you to allow Muzza to install updates. Turn it on and come back; the update continues by itself.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }

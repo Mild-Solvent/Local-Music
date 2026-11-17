@@ -57,7 +57,9 @@ object Updater {
 
     /** Quiet check on app start, at most every 12 hours. Nothing is shown when offline. */
     fun autoCheck() {
-        if (System.currentTimeMillis() - Prefs.lastUpdateCheck < AUTO_EVERY_MS) return
+        // The 12-hour clock restarts with every new version, so a fresh install checks right away.
+        val sameVersion = Prefs.lastUpdateCheckVersion == BuildConfig.VERSION_CODE
+        if (sameVersion && System.currentTimeMillis() - Prefs.lastUpdateCheck < AUTO_EVERY_MS) return
         LyraApp.appScope.launch { check(manual = false) }
     }
 
@@ -68,6 +70,7 @@ object Updater {
         _state.value = State.Checking
         val rel = runCatching { withContext(Dispatchers.IO) { fetchLatest() } }.getOrNull()
         Prefs.lastUpdateCheck = System.currentTimeMillis()
+        Prefs.lastUpdateCheckVersion = BuildConfig.VERSION_CODE
         val newer = rel != null && rel.versionCode > BuildConfig.VERSION_CODE
         _state.value = when {
             newer -> State.Available(rel!!)
@@ -116,6 +119,22 @@ object Updater {
 
     /** Android has to allow Muzza to install apps once; this opens that switch. */
     fun canInstall(ctx: Context) = ctx.packageManager.canRequestPackageInstalls()
+
+    /** Update she tapped before allowing installs; it continues by itself when she comes back. */
+    private var waitingForPermission: Release? = null
+
+    /** Update button: asks for the install permission first if needed, otherwise starts. */
+    fun start(ctx: Context, rel: Release) {
+        if (!canInstall(ctx)) { waitingForPermission = rel; _prompt.value = false; openInstallPermission(ctx); return }
+        downloadAndInstall(ctx, rel)
+    }
+
+    /** Called when the app comes back to the screen. */
+    fun onResume(ctx: Context) {
+        val rel = waitingForPermission ?: return
+        if (canInstall(ctx)) { waitingForPermission = null; downloadAndInstall(ctx, rel) }
+    }
+
     fun openInstallPermission(ctx: Context) {
         ctx.startActivity(
             Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -211,5 +230,25 @@ class InstallResultReceiver : BroadcastReceiver() {
             confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let { context.startActivity(it) }
         }
         Updater.onInstallResult(status, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE))
+    }
+}
+
+/** After an update Android closes the app; this says "Muzza updated" with a tap to open it again. */
+class UpdatedReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+        File(context.cacheDir, "updates").deleteRecursively()
+        val nm = context.getSystemService(android.app.NotificationManager::class.java)
+        nm.createNotificationChannel(android.app.NotificationChannel("updates", "App updates", android.app.NotificationManager.IMPORTANCE_DEFAULT))
+        val open = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
+        val pi = PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val n = androidx.core.app.NotificationCompat.Builder(context, "updates")
+            .setSmallIcon(com.lyra.player.R.drawable.ic_stat_lyra)
+            .setContentTitle("Muzza updated to ${BuildConfig.VERSION_NAME}")
+            .setContentText("Tap to open")
+            .setContentIntent(pi)
+            .setAutoCancel(true)
+            .build()
+        runCatching { nm.notify(4711, n) } // no notification permission: nothing to show
     }
 }
