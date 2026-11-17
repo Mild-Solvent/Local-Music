@@ -9,6 +9,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -36,29 +39,38 @@ import kotlin.math.cos
  */
 val LocalWater = staticCompositionLocalOf { false }
 
+/**
+ * Theme colours. [dark] switches between the daytime water and the deep night-sea version;
+ * it is snapshot state, so everything that reads a colour redraws when it changes.
+ */
 object Sea {
-    val Water = Color(0xFF049DEB)
-    val Tile = Color(0xFF74D0E0)
-    val RowBg = Color(0xFFCBE6E1)
-    val Cream = Color(0xFFFAF2E0)
-    val Blue = Color(0xFF2470DF)
+    var dark by mutableStateOf(false)
+    private fun pick(day: Long, night: Long) = Color(if (dark) night else day)
+
+    val Water get() = pick(0xFF049DEB, 0xFF0A2647)
+    val Tile get() = pick(0xFF74D0E0, 0xFF1D4F80)
+    val RowBg get() = pick(0xFFCBE6E1, 0xFF123A63)
+    val Cream get() = pick(0xFFFAF2E0, 0xFF16375C)      // cards, bottom bar, mini player
+    val Blue get() = pick(0xFF2470DF, 0xFF3C86EE)
     val FishBody = Color(0xFF358FDD)
     val Belly = Color(0xFF5DCCDF)
     val Pupil = Color(0xFF1B4FA8)
-    val Seabed = Color(0xFF2C7BDC)
-    val MidWave = Color(0xFF429FE3)
+    val Seabed get() = pick(0xFF2C7BDC, 0xFF0D3666)
+    val MidWave get() = pick(0xFF429FE3, 0xFF15467E)
     val YellowCoral = Color(0xFFF8DC79)
     val Yellow = Color(0xFFF6C445)
     val YellowFin = Color(0xFFE8A92E)
-    val BlueCoral = Color(0xFF1F63C9)
+    val BlueCoral get() = pick(0xFF1F63C9, 0xFF3C86EE)
     val Slug = Color(0xFF93B8F0)
-    val Navy = Color(0xFF08294F)
-    val Muted = Color(0xFF2E5A8A)
-    val Mint = Color(0xFF9ADDEA)
-    val BackCoral = Color(0xFF17A6EE)   // solid, same tone as the old see-through coral
-    val BackCoralDeep = Color(0xFF0697E3)
-    val Star = Color(0xFF1B4FA8)
-    val LightText = Color(0xFFD3F0F7)
+    val Navy get() = pick(0xFF08294F, 0xFFEAF6FB)       // main text colour
+    val Muted get() = pick(0xFF2E5A8A, 0xFF9FC3E6)
+    val Mint get() = pick(0xFF9ADDEA, 0xFF2A5C8F)
+    val BackCoral get() = pick(0xFF17A6EE, 0xFF0F3360)
+    val BackCoralDeep get() = pick(0xFF0697E3, 0xFF0C2D52)
+    val Star get() = pick(0xFF1B4FA8, 0xFF9CC8FF)
+    val LightText get() = pick(0xFFD3F0F7, 0xFF9ADDEA)
+    /** Eye whites, bubbles, the slug stripe and the shell stay light in both versions. */
+    val Pearl = Color(0xFFFAF2E0)
 }
 
 // ---- shapes from the design (SVG path data) ----
@@ -127,17 +139,17 @@ private fun DrawScope.strokes(ds: List<String>, c: Color, w: Float, alpha: Float
 private fun DrawScope.blueFish() {
     drawPath(p(TAIL), Sea.Blue); drawPath(p(DORSAL), Sea.Blue)
     drawPath(p(BODY), Sea.FishBody); drawPath(p(BELLY), Sea.Belly); drawPath(p(PECTORAL), Sea.Blue)
-    drawCircle(Sea.Cream, 7f, Offset(92f, 36f)); drawCircle(Sea.Pupil, 4.5f, Offset(93f, 36f))
+    drawCircle(Sea.Pearl, 7f, Offset(92f, 36f)); drawCircle(Sea.Pupil, 4.5f, Offset(93f, 36f))
 }
 
 private fun DrawScope.smallFish(body: Color, fin: Color, slim: Boolean = false, bigEye: Boolean = false) {
     drawPath(p(TAIL), fin); drawPath(p(if (slim) BODY_SLIM else BODY), body)
-    drawCircle(Sea.Cream, if (bigEye) 8f else 7f, Offset(92f, 36f)); drawCircle(Sea.Pupil, if (bigEye) 5f else 4.5f, Offset(93f, 36f))
+    drawCircle(Sea.Pearl, if (bigEye) 8f else 7f, Offset(92f, 36f)); drawCircle(Sea.Pupil, if (bigEye) 5f else 4.5f, Offset(93f, 36f))
 }
 
 private fun DrawScope.seaSlug() {
     drawPath(p(SLUG_FOOT), Sea.Slug); drawPath(p(SLUG_BODY), Sea.Slug)
-    drawPath(p(SLUG_STRIPE), Sea.Cream, style = Stroke(4f, cap = StrokeCap.Round))
+    drawPath(p(SLUG_STRIPE), Sea.Pearl, style = Stroke(4f, cap = StrokeCap.Round))
     oval(Sea.Yellow, 16f, 26f, 4.5f, 9f, -50f); oval(Sea.Yellow, 22f, 21f, 4.5f, 9.5f, -20f); oval(Sea.Yellow, 30f, 20f, 4f, 9f, -10f)
     drawCircle(Sea.Seabed, 3f, Offset(52f, 32f)); drawCircle(Sea.Seabed, 3f, Offset(64f, 30f)); drawCircle(Sea.Seabed, 2.5f, Offset(58f, 40f))
     oval(Sea.Yellow, 71f, 22f, 4.5f, 10.5f, -40f); oval(Sea.Yellow, 84f, 19f, 3.5f, 10f)
@@ -161,7 +173,7 @@ private fun DrawScope.bubbles(t: Float, pts: List<Triple<Float, Float, Float>>) 
     pts.forEachIndexed { i, (x, y, r) ->
         val ph = ((t + i * 1f) % 3f) / 3f
         val a = if (ph < 0.3f) ph / 0.3f else 1f - (ph - 0.3f) / 0.7f
-        drawCircle(Sea.Cream, r, Offset(x, y + 6f - 22f * ph), alpha = a.coerceIn(0f, 1f))
+        drawCircle(Sea.Pearl, r, Offset(x, y + 6f - 22f * ph), alpha = a.coerceIn(0f, 1f))
     }
 }
 
@@ -245,7 +257,7 @@ fun CoverScene(modifier: Modifier = Modifier) {
                 strokes(listOf("M300 306 V222", "M300 266 C286 256 280 238 280 214", "M300 246 C314 236 320 218 320 194", "M320 214 C330 208 334 198 334 186"), Sea.BlueCoral, 10f)
             }
             brainCoral(210f, 300f, 26f, t)
-            drawOval(Sea.Cream, Offset(118f, 291f), Size(32f, 22f)); drawCircle(Sea.Blue, 6.5f, Offset(134f, 293f))
+            drawOval(Sea.Pearl, Offset(118f, 291f), Size(32f, 22f)); drawCircle(Sea.Blue, 6.5f, Offset(134f, 293f))
             swim(t, 4f) {
                 at(70f, 104f, 1.75f) { blueFish() }
                 bubbles(t, listOf(Triple(272f, 150f, 6f), Triple(284f, 120f, 9f), Triple(276f, 90f, 7f)))
@@ -272,7 +284,7 @@ fun SeabedStrip(modifier: Modifier = Modifier) {
     }
 }
 
-private val tilePalettes = listOf(
+private val tilePalettes get() = listOf(
     Triple(Sea.Tile, Sea.FishBody, Sea.Blue),
     Triple(Sea.Belly, Sea.Yellow, Sea.YellowFin),
     Triple(Sea.Cream, Sea.Slug, Sea.Seabed),
@@ -311,7 +323,7 @@ fun WavyTrack(fraction: Float, modifier: Modifier = Modifier) {
             var x = 0f; var up = true
             while (x < end + seg) { quadraticBezierTo(x + seg / 2, if (up) cy - amp else cy + amp, x + seg, cy); x += seg; up = !up }
         }
-        clipRect(right = end) { drawPath(path, Sea.Cream, style = Stroke(5.dp.toPx(), cap = StrokeCap.Round)) }
+        clipRect(right = end) { drawPath(path, Sea.Pearl, style = Stroke(5.dp.toPx(), cap = StrokeCap.Round)) }
     }
 }
 

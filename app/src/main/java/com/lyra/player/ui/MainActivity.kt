@@ -106,7 +106,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val theme by Prefs.theme.collectAsState()
             val dynamic by Prefs.dynamicColor.collectAsState()
-            LyraTheme(theme, dynamic) { Root() }
+            val waterDark by Prefs.waterDark.collectAsState()
+            LyraTheme(theme, dynamic, waterDark) { Root() }
         }
     }
 

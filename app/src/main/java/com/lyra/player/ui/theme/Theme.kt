@@ -115,6 +115,40 @@ private val Water = lightColorScheme(
     error = Color(0xFFB3261E),
 )
 
+private val DeepWater = darkColorScheme(
+    primary = Color(0xFF9CC8FF),
+    onPrimary = Color(0xFF08294F),
+    primaryContainer = Color(0xFF1D4F80),
+    onPrimaryContainer = Color(0xFFEAF6FB),
+    inversePrimary = Color(0xFF2470DF),
+    secondary = Color(0xFF9CC8FF),
+    onSecondary = Color(0xFF08294F),
+    secondaryContainer = Color(0xFF16375C),
+    onSecondaryContainer = Color(0xFFEAF6FB),
+    tertiary = Color(0xFFF6C445),
+    onTertiary = Color(0xFF08294F),
+    tertiaryContainer = Color(0xFF6B5418),
+    onTertiaryContainer = Color(0xFFF8DC79),
+    background = Color(0xFF0A2647),
+    onBackground = Color(0xFFEAF6FB),
+    surface = Color(0xFF0A2647),
+    onSurface = Color(0xFFEAF6FB),
+    surfaceVariant = Color(0xFF123A63),
+    onSurfaceVariant = Color(0xFFBFDDF2),
+    surfaceTint = Color.Transparent,
+    inverseSurface = Color(0xFFEAF6FB),
+    inverseOnSurface = Color(0xFF08294F),
+    surfaceBright = Color(0xFF1D4F80),
+    surfaceDim = Color(0xFF071C36),
+    surfaceContainerLowest = Color(0xFF071C36),
+    surfaceContainerLow = Color(0xFF16375C),
+    surfaceContainer = Color(0xFF16375C),
+    surfaceContainerHigh = Color(0xFF1A4068),
+    surfaceContainerHighest = Color(0xFF1D4F80),
+    outline = Color(0xFF5D9BE0),
+    outlineVariant = Color(0xFF1D4F80),
+)
+
 @OptIn(ExperimentalTextApi::class)
 private fun vf(res: Int, w: Int) = Font(res, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
 
@@ -134,9 +168,13 @@ private val WaterType = Typography().let { t ->
 }
 
 @Composable
-fun LyraTheme(mode: ThemeMode, dynamic: Boolean, content: @Composable () -> Unit) {
+fun LyraTheme(mode: ThemeMode, dynamic: Boolean, waterDark: Boolean = false, content: @Composable () -> Unit) {
     if (mode == ThemeMode.WATER) {
-        CompositionLocalProvider(LocalWater provides true) { MaterialTheme(colorScheme = Water, typography = WaterType, content = content) }
+        val deep = waterDark
+        Sea.dark = deep
+        CompositionLocalProvider(LocalWater provides true) {
+            MaterialTheme(colorScheme = if (deep) DeepWater else Water, typography = WaterType, content = content)
+        }
         return
     }
     val dark = when (mode) { ThemeMode.SYSTEM, ThemeMode.WATER -> isSystemInDarkTheme(); ThemeMode.DARK -> true; ThemeMode.LIGHT -> false }

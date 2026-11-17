@@ -90,7 +90,18 @@ fun SettingsScreen() {
                     }
                 }
             }
-            Toggle("Wallpaper colours", "Match the app to your phone's wallpaper (Android 12+)", dynamic) { Prefs.setDynamicColor(it) }
+            if (theme == ThemeMode.WATER) {
+                val waterDark by Prefs.waterDark.collectAsState()
+                // Water comes in a light (daytime sea) and a dark (night sea) version
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    listOf(false to "Light water", true to "Dark water").forEachIndexed { i, (d, label) ->
+                        SegmentedButton(
+                            waterDark == d, { Prefs.setWaterDark(d) }, SegmentedButtonDefaults.itemShape(i, 2),
+                            colors = SegmentedButtonDefaults.colors(activeContainerColor = Sea.Tile, activeContentColor = Sea.Navy, inactiveContainerColor = Sea.Cream, inactiveContentColor = Sea.Navy, activeBorderColor = Sea.Blue, inactiveBorderColor = Sea.Blue),
+                        ) { Text(label) }
+                    }
+                }
+            } else Toggle("Wallpaper colours", "Match the app to your phone's wallpaper (Android 12+)", dynamic) { Prefs.setDynamicColor(it) }
 
             HorizontalDivider()
             Header("Sound")

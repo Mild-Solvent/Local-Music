@@ -16,6 +16,9 @@ object Prefs {
 
     private val _theme = MutableStateFlow(ThemeMode.WATER)
     val theme: StateFlow<ThemeMode> = _theme.asStateFlow()
+    private val _waterDark = MutableStateFlow(false)
+    /** Night-sea version of the water theme (only used when the theme is WATER). */
+    val waterDark: StateFlow<Boolean> = _waterDark.asStateFlow()
     private val _dynamicColor = MutableStateFlow(false)
     val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
     private val _sort = MutableStateFlow(SongSort.TITLE)
@@ -27,10 +30,12 @@ object Prefs {
         if (!sp.getBoolean("water_theme_v1", false)) sp.edit().putString("theme", ThemeMode.WATER.name).putBoolean("water_theme_v1", true).apply()
         _theme.value = runCatching { ThemeMode.valueOf(sp.getString("theme", null)!!) }.getOrDefault(ThemeMode.WATER)
         _dynamicColor.value = sp.getBoolean("dynamic_color", false)
+        _waterDark.value = sp.getBoolean("water_dark", false)
         _sort.value = runCatching { SongSort.valueOf(sp.getString("sort", null)!!) }.getOrDefault(SongSort.TITLE)
     }
 
     fun setTheme(v: ThemeMode) { _theme.value = v; sp.edit().putString("theme", v.name).apply() }
+    fun setWaterDark(v: Boolean) { _waterDark.value = v; sp.edit().putBoolean("water_dark", v).apply() }
     fun setDynamicColor(v: Boolean) { _dynamicColor.value = v; sp.edit().putBoolean("dynamic_color", v).apply() }
     fun setSort(v: SongSort) { _sort.value = v; sp.edit().putString("sort", v.name).apply() }
 
