@@ -124,8 +124,23 @@ private fun Content(s: Screen) {
 private fun Banners() {
     val upd by Updater.available.collectAsState()
     val ps by Player.state.collectAsState()
+    val prog by Updater.progress.collectAsState()
+    val updStatus by Updater.status.collectAsState()
     upd?.let { r ->
-        Banner(Icons.Filled.SystemUpdate, "Muzza ${r.version} is out. Click to download it.", onClick = { Files.browse(r.page) }) { Updater.dismiss() }
+        val text = when {
+            prog in 0f..1f -> "Downloading Muzza ${r.version}… ${(prog * 100).toInt()}%"
+            prog > 1f -> "Installing Muzza ${r.version}. Muzza will restart in a moment…"
+            updStatus.startsWith("Update failed") -> "$updStatus · Click to try again"
+            Updater.canSelfUpdate(r) -> "Muzza ${r.version} is out. Click to update (Muzza restarts by itself)."
+            else -> "Muzza ${r.version} is out. Click to get it."
+        }
+        Banner(Icons.Filled.SystemUpdate, text, onClick = {
+            when {
+                prog >= 0f -> Unit
+                Updater.canSelfUpdate(r) -> Updater.install(r) { Player.shutdown(); kotlin.system.exitProcess(0) }
+                else -> Files.browse(r.page)
+            }
+        }) { Updater.dismiss() }
     }
     ps.error?.let { e -> Banner(Icons.Filled.Warning, e, onClick = null) { Player.dismissError() } }
 }

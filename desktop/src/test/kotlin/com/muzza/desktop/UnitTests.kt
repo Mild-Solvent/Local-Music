@@ -17,6 +17,7 @@ class UnitTests {
         val r = Updater.latestDesktop(res("releases.json"))!!
         assertEquals("1.1.0", r.version)
         assertTrue(r.page.endsWith("desktop-v1.1.0"))
+        assertTrue(r.pkg!!.url.endsWith(r.packageName), r.pkg!!.url)
     }
 
     @Test fun updaterHandlesNoReleases() = assertNull(Updater.latestDesktop("[]"))
