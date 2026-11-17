@@ -24,19 +24,30 @@ import java.net.URL
 import java.security.MessageDigest
 
 /**
- * In-app updates from the devbox app store (https://devbox.tail20cc8f.ts.net/apps).
+ * In-app updates from GitHub Releases of Mild-Solvent/Local-Music (APKs built and signed on devbox).
  *
  * The app only goes online here when it checks (at most every 12 hours, or when asked) and when
  * she taps Update. The APK is checked against its sha256 and installed with Android's own
  * installer, which also refuses anything not signed with the same key as the installed app.
  */
 object Updater {
-    private val BASE = BuildConfig.UPDATE_HOST + "/f/local-music/"
-    private val API = BuildConfig.UPDATE_HOST + "/api/apps"
+    /** GitHub "latest release" of Mild-Solvent/Local-Music (or a local test feed in test builds). */
+    private val API = BuildConfig.UPDATE_API
     private val ABI_TAG = mapOf("arm64-v8a" to "arm64", "armeabi-v7a" to "armv7", "x86_64" to "x86_64")
     private const val AUTO_EVERY_MS = 12 * 60 * 60 * 1000L
 
-    data class Release(val versionCode: Int, val versionName: String, val notes: String, val file: String, val sha256: String)
+    /** [versionCode] comes from a "versionCode: N" line in the release notes when present. */
+    data class Release(val versionCode: Int?, val versionName: String, val notes: String, val url: String, val sha256: String) {
+        val id get() = versionCode ?: versionName.hashCode()
+        fun isNewer(): Boolean = versionCode?.let { it > BuildConfig.VERSION_CODE } ?: newerName(versionName, BuildConfig.VERSION_NAME)
+    }
+
+    private fun newerName(a: String, b: String): Boolean {
+        fun parts(v: String) = v.trimStart('v', 'V').substringBefore('-').split('.').map { it.toIntOrNull() ?: 0 }
+        val x = parts(a); val y = parts(b)
+        for (i in 0 until maxOf(x.size, y.size)) { val d = x.getOrElse(i) { 0 } - y.getOrElse(i) { 0 }; if (d != 0) return d > 0 }
+        return false
+    }
 
     sealed interface State {
         data object Idle : State
@@ -71,40 +82,40 @@ object Updater {
         val rel = runCatching { withContext(Dispatchers.IO) { fetchLatest() } }.getOrNull()
         Prefs.lastUpdateCheck = System.currentTimeMillis()
         Prefs.lastUpdateCheckVersion = BuildConfig.VERSION_CODE
-        val newer = rel != null && rel.versionCode > BuildConfig.VERSION_CODE
+        val newer = rel != null && rel.isNewer()
         _state.value = when {
             newer -> State.Available(rel!!)
             rel != null -> State.UpToDate
             manual -> State.Failed("Couldn't reach the update server. Check your internet and try again.")
             else -> State.Idle
         }
-        if (newer && (manual || Prefs.snoozedVersion != rel!!.versionCode)) _prompt.value = true
+        if (newer && (manual || Prefs.snoozedVersion != rel!!.id)) _prompt.value = true
     }
 
     /**
-     * Reads the devbox store's public app list (GET /apps/api/apps). The Muzza entry carries
-     * meta.versionCode, meta.version, meta.whatsNew (from ~/downloadables/local-music/meta.json),
-     * optional meta.sha256 {file: hash}, and files[].path (+ optional files[].sha256).
+     * Reads the newest GitHub release: tag "v1.2.1", notes in the body (an optional
+     * "versionCode: N" line), and the APKs as assets named Muzza-<ver>-arm64/-armv7/-x86_64.apk.
+     * GitHub lists each asset's sha256 in "digest"; Android also checks the signing key.
      */
     private fun fetchLatest(): Release {
-        val body = get(API).decodeToString().trim()
-        val list = if (body.startsWith("[")) org.json.JSONArray(body) else JSONObject(body).let { o -> o.optJSONArray("projects") ?: o.optJSONArray("apps") ?: o.optJSONArray("items") ?: error("Bad feed") }
-        val app = (0 until list.length()).map { list.getJSONObject(it) }.firstOrNull { it.optString("name") == "local-music" } ?: error("Muzza not in store")
-        val meta = app.optJSONObject("meta") ?: JSONObject()
-        val code = meta.optInt("versionCode", -1).takeIf { it > 0 } ?: error("No versionCode")
-        val files = app.optJSONArray("files") ?: error("No files")
-        val paths = (0 until files.length()).map { files.getJSONObject(it) }
+        val rel = JSONObject(get(API).decodeToString())
+        val tag = rel.getString("tag_name")
+        val body = rel.optString("body", "")
+        val code = Regex("""versionCode\s*[:=]\s*(\d+)""").find(body)?.groupValues?.get(1)?.toIntOrNull()
+        val notes = body.lines().filterNot { it.contains("versionCode", ignoreCase = true) }.joinToString("\n").trim()
+        val assets = rel.getJSONArray("assets").let { a -> (0 until a.length()).map { a.getJSONObject(it) } }
         val tags = Build.SUPPORTED_ABIS.mapNotNull { abi -> ABI_TAG[abi] }
-        val file = tags.firstNotNullOfOrNull { tag -> paths.firstOrNull { it.optString("path").endsWith("-$tag.apk") } } ?: error("No APK for this phone")
-        val path = file.getString("path")
-        val sha = file.optString("sha256").ifEmpty { meta.optJSONObject("sha256")?.optString(path.substringAfterLast('/')).orEmpty() }
-        return Release(code, meta.optString("version", "$code"), meta.optString("whatsNew", ""), path, sha.lowercase())
+        val asset = tags.firstNotNullOfOrNull { t -> assets.firstOrNull { it.optString("name").endsWith("-$t.apk") } } ?: error("No APK for this phone")
+        val sha = asset.optString("digest").removePrefix("sha256:").takeIf { it.length == 64 }.orEmpty()
+        return Release(code, tag.trimStart('v', 'V'), notes, asset.getString("browser_download_url"), sha.lowercase())
     }
 
     private fun get(url: String): ByteArray {
         val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = 10_000; c.readTimeout = 15_000
         c.useCaches = false
+        c.setRequestProperty("Accept", "application/vnd.github+json")
+        c.setRequestProperty("User-Agent", "Muzza-app")
         try {
             if (c.responseCode != 200) error("HTTP ${c.responseCode}")
             return c.inputStream.use { it.readBytes() }
@@ -113,7 +124,7 @@ object Updater {
 
     /** "Later" on the pop-up: don't pop up again for this version (Settings still offers it). */
     fun later() {
-        (_state.value as? State.Available)?.let { Prefs.snoozedVersion = it.release.versionCode }
+        (_state.value as? State.Available)?.let { Prefs.snoozedVersion = it.release.id }
         _prompt.value = false
     }
 
@@ -148,7 +159,7 @@ object Updater {
             val file = File(app.cacheDir, "updates/muzza-update.apk").apply { parentFile?.mkdirs(); delete() }
             try {
                 _state.value = State.Downloading(rel, 0f)
-                withContext(Dispatchers.IO) { download(BASE + rel.file.split('/').joinToString("/") { Uri.encode(it) }, file) { p -> _state.value = State.Downloading(rel, p) } }
+                withContext(Dispatchers.IO) { download(rel.url, file) { p -> _state.value = State.Downloading(rel, p) } }
                 val sum = withContext(Dispatchers.IO) { sha256(file) }
                 // Android also refuses an APK not signed with Muzza's own key, so this is a second check.
                 if (rel.sha256.isNotEmpty() && sum != rel.sha256) error("The download was damaged. Please try again.")
