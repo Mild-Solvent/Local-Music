@@ -24,6 +24,22 @@ import com.lyra.player.update.Updater
 fun UpdatePrompt() {
     val show by Updater.prompt.collectAsState()
     val st by Updater.state.collectAsState()
+    // While downloading, show progress wherever she is (not only in Settings).
+    (st as? Updater.State.Downloading)?.let { d ->
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Updating Muzza") },
+            text = {
+                Column {
+                    Text("Downloading ${d.release.versionName}… ${(d.progress * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(progress = { d.progress }, modifier = Modifier.fillMaxWidth().height(6.dp))
+                }
+            },
+            confirmButton = {},
+        )
+        return
+    }
     val rel = (st as? Updater.State.Available)?.release ?: return
     if (!show) return
     val ctx = LocalContext.current
