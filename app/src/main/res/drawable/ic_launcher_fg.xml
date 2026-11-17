@@ -1,8 +1,16 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <group android:translateX="27" android:translateY="27">
-        <!-- a stylised lyre / wave mark -->
-        <path android:fillColor="#FFFFFFFF"
-            android:pathData="M18,8 C11,8 8,14 8,22 C8,34 18,44 27,48 C36,44 46,34 46,22 C46,14 43,8 36,8 C33,8 30,10 27,13 C24,10 21,8 18,8 Z M18,13 C21,13 23,15 25,18 L25,40 C18,36 13,29 13,22 C13,16 15,13 18,13 Z M36,13 C39,13 41,16 41,22 C41,29 36,36 29,40 L29,18 C31,15 33,13 36,13 Z" />
+    <!-- the blue fish from the water theme, inside the 66dp safe zone -->
+    <group android:translateX="22" android:translateY="34" android:scaleX="0.56" android:scaleY="0.56">
+        <path android:fillColor="#FF2470DF" android:pathData="M28 40 C20 30 12 22 7 24 C2 27 6 35 9 40 C6 45 2 53 7 56 C12 58 20 50 28 40Z" />
+        <path android:fillColor="#FF2470DF" android:pathData="M35.82 26.64 C37.82 14.64 54.3 11.95 66.94 14.13 C83.47 16.99 87 24.91 79 24.91 C69 24.91 43.82 28.64 35.82 26.64 Z" />
+        <path android:fillColor="#FF358FDD" android:pathData="M20 40 C30 18 80 14 104 32 C112 38 112 46 104 50 C80 66 32 64 20 40Z" />
+        <path android:fillColor="#FF5DCCDF" android:pathData="M30 46 C50 60 84 60 100 50 C84 56 50 56 30 46Z" />
+        <path android:fillColor="#FF2470DF" android:pathData="M63 46 C59 54 59.36 64.45 66.36 64.45 C73.36 64.45 77.36 59.91 75.36 51.91 Z" />
+        <path android:fillColor="#FFFAF2E0" android:pathData="M85,36 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
+        <path android:fillColor="#FF1B4FA8" android:pathData="M88.5,36 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0 Z" />
     </group>
+    <!-- bubbles -->
+    <path android:fillColor="#FFFAF2E0" android:pathData="M78,30 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 Z" />
+    <path android:fillColor="#FFFAF2E0" android:pathData="M82,21 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z" />
 </vector>
