@@ -50,8 +50,10 @@ cp "$DESKTOP/build/fat/muzza-desktop-windows-x64.jar" "$W/app/muzza.jar"
 link "$CACHE/$JV-windows/jmods" "$W/runtime"
 unzip -q -j -o "$CACHE/$FFWIN" '*/bin/ffmpeg.exe' -d "$W/ffmpeg"
 python3 -m pip install -q --user ziglang >/dev/null 2>&1 || true
-( cd "$HERE" && python3 -m ziglang cc -target x86_64-windows-gnu -municode -mwindows -O2 launcher.c launcher.rc -o "$W/Muzza.exe" ) \
-  || ( cd "$HERE" && python3 -m ziglang cc -target x86_64-windows-gnu -municode -mwindows -O2 launcher.c -o "$W/Muzza.exe" && echo "   (no icon in Muzza.exe)" )
+( cd "$HERE" && python3 -m ziglang cc -target x86_64-windows-gnu -municode -Wl,--subsystem,windows -O2 launcher.c launcher.rc -o "$W/Muzza.exe" ) \
+  || ( cd "$HERE" && python3 -m ziglang cc -target x86_64-windows-gnu -municode -Wl,--subsystem,windows -O2 launcher.c -o "$W/Muzza.exe" && echo "   (no icon in Muzza.exe)" )
+rm -f "$W/Muzza.pdb"
+file "$W/Muzza.exe" | grep -q "(GUI)" || { echo "Muzza.exe is not a GUI exe"; exit 1; }
 printf 'Muzza %s for Windows\r\n\r\n1. Unzip this whole folder somewhere (for example Documents).\r\n2. Double-click Muzza.exe. If Windows says "Windows protected your PC", click More info, then Run anyway (the app is not signed by Microsoft).\r\n3. Right-click Muzza.exe > Send to > Desktop (create shortcut) for a desktop icon.\r\n\r\nYour songs: everything in your Music folder (add more folders in Settings).\r\nDownloads go to Music\\Muzza.\r\n' "$VER" > "$W/READ ME.txt"
 rm -f "$OUT/Muzza-Desktop-$VER-windows-x64.zip"
 ( cd "$WORK" && zip -qr -9 "$OUT/Muzza-Desktop-$VER-windows-x64.zip" Muzza )

@@ -89,7 +89,7 @@ fun App() {
                         }
                         if (Nav.queueOpen) QueuePanel()
                     }
-                    AnimatedVisibility(Nav.nowPlayingOpen, enter = slideInVertically { it / 3 } + fadeIn(), exit = slideOutVertically { it / 3 } + fadeOut()) {
+                    androidx.compose.animation.AnimatedVisibility(Nav.nowPlayingOpen, enter = slideInVertically { it / 3 } + fadeIn(), exit = slideOutVertically { it / 3 } + fadeOut()) {
                         NowPlaying()
                     }
                 }
