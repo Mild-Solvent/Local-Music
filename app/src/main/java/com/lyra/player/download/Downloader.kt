@@ -249,7 +249,9 @@ object Downloader {
         // "Artist - Song (Official Video)" → artist = Artist, title = Song
         req.addOption("--parse-metadata", "title:(?P<artist>.+?) - (?P<title>.+)")
         req.addCommands(listOf("--replace-in-metadata", "title", """(?i)\s*[(\[][^)\]]*(official|lyric|lyrics|audio|video|visuali[sz]er|hd|hq|4k|mv)[^)\]]*[)\]]""", ""))
-        req.addOption("--parse-metadata", "%(album,playlist_title|Muzza downloads)s:%(meta_album)s")
+        // Android keeps one cover per album, so a single video gets its own album (its title).
+        // A shared album name made every download show the first download's cover.
+        req.addOption("--parse-metadata", "%(album,playlist_title,title)s:%(meta_album)s")
         if (fancy && fmt != AudioFormat.OPUS) {
             req.addOption("--embed-thumbnail")
             req.addOption("--convert-thumbnails", "jpg")

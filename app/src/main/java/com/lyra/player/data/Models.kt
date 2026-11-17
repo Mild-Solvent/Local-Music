@@ -20,7 +20,8 @@ data class Song(
     val year: Int,
     val size: Long,
 ) {
-    val artUri: Uri get() = albumArtUri(albumId)
+    /** This song's own cover (see [CoverArt]). Read inside Compose, it updates when the cover is changed. */
+    val artUri: Uri get() = CoverArt.uriFor(this)
 
     fun toMediaItem(): MediaItem = MediaItem.Builder()
         .setMediaId(id.toString())
@@ -30,7 +31,7 @@ data class Song(
                 .setTitle(title)
                 .setArtist(artist)
                 .setAlbumTitle(album)
-                .setArtworkUri(artUri)
+                .setArtworkUri(CoverArt.notificationUriFor(this))
                 .setIsPlayable(true)
                 .setIsBrowsable(false)
                 .build()

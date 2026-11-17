@@ -32,6 +32,8 @@ data class LibraryData(
     val playCounts: Map<Long, Int> = emptyMap(),
     val lastPlayed: Map<Long, Long> = emptyMap(),
     val searchHistory: List<String> = emptyList(),
+    /** song id -> "fish" or path of a custom cover picture */
+    val covers: Map<Long, String> = emptyMap(),
 )
 
 /** Playlists, liked songs and listening stats. Stored as one small JSON file on the phone. */
@@ -63,6 +65,8 @@ object LibraryStore {
             if (!tmp.renameTo(file)) { file.delete(); tmp.renameTo(file) }
         }.onFailure { Log.w(TAG, "save failed", it) }
     }
+
+    fun setCovers(covers: Map<Long, String>) = _data.update { it.copy(covers = covers) }
 
     // ---- favorites ----
     fun isFavorite(id: Long) = id in _data.value.favorites

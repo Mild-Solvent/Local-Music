@@ -1,5 +1,8 @@
 package com.lyra.player.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import com.lyra.player.ui.theme.FishTile
 import com.lyra.player.ui.theme.LocalWater
 import com.lyra.player.ui.theme.RoundStar
@@ -43,7 +46,10 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.SetMeal
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
@@ -76,6 +82,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +99,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import kotlinx.coroutines.launch
+import com.lyra.player.data.CoverArt
 import com.lyra.player.data.LibraryStore
 import com.lyra.player.data.MusicRepository
 import com.lyra.player.data.Song
@@ -234,6 +243,18 @@ fun SongMenuSheet(menu: SongMenu, onDismiss: () -> Unit) {
     val liked = song.id in data.favorites
     var addTo by remember { mutableStateOf(false) }
     var info by remember { mutableStateOf(false) }
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val cover = CoverArt.override(song.id)
+    // The sheet stays open while the gallery is up, so the picked picture comes back here.
+    val pickCover = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { picked ->
+        if (picked == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = CoverArt.setCustom(ctx, song.id, picked)
+            actions.toast(if (ok) "Cover changed" else "Couldn't use that picture")
+            onDismiss()
+        }
+    }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Row(Modifier.padding(horizontal = 20.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             ArtImage(song.artUri, size = 56.dp, seed = song.album)
@@ -255,6 +276,9 @@ fun SongMenuSheet(menu: SongMenu, onDismiss: () -> Unit) {
                 item { MenuItem(Icons.Filled.RemoveCircleOutline, "Remove from this playlist") { LibraryStore.removeFromPlaylist(menu.playlistId, menu.playlistIndex); onDismiss() } }
             }
             if (menu.queueIndex >= 0) item { MenuItem(Icons.Filled.RemoveCircleOutline, "Remove from queue") { PlayerConnection.removeAt(menu.queueIndex); onDismiss() } }
+            item { MenuItem(Icons.Filled.Image, "Change cover") { pickCover.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) } }
+            if (cover != CoverArt.FISH) item { MenuItem(Icons.Filled.SetMeal, "Use fish cover") { CoverArt.useFish(song.id); actions.toast("Fish cover on"); onDismiss() } }
+            if (cover != null) item { MenuItem(Icons.Filled.Restore, "Restore original cover") { CoverArt.restore(song.id); actions.toast("Original cover back"); onDismiss() } }
             item { MenuItem(Icons.Filled.Album, "Go to album") { onDismiss(); actions.openAlbum(song.albumId) } }
             item { MenuItem(Icons.Filled.Person, "Go to artist") { onDismiss(); actions.openArtist(song.artist) } }
             item { MenuItem(Icons.Filled.Share, "Share file") { actions.share(song); onDismiss() } }
