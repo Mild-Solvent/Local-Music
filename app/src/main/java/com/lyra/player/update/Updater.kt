@@ -88,7 +88,7 @@ object Updater {
      */
     private fun fetchLatest(): Release {
         val body = get(API).decodeToString().trim()
-        val list = if (body.startsWith("[")) org.json.JSONArray(body) else JSONObject(body).let { o -> o.optJSONArray("apps") ?: o.optJSONArray("items") ?: error("Bad feed") }
+        val list = if (body.startsWith("[")) org.json.JSONArray(body) else JSONObject(body).let { o -> o.optJSONArray("projects") ?: o.optJSONArray("apps") ?: o.optJSONArray("items") ?: error("Bad feed") }
         val app = (0 until list.length()).map { list.getJSONObject(it) }.firstOrNull { it.optString("name") == "local-music" } ?: error("Muzza not in store")
         val meta = app.optJSONObject("meta") ?: JSONObject()
         val code = meta.optInt("versionCode", -1).takeIf { it > 0 } ?: error("No versionCode")
