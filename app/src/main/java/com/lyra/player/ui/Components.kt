@@ -72,6 +72,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -123,6 +124,11 @@ fun ArtImage(
     val ctx = LocalContext.current
     val data: Any? = url ?: uri
     val water = LocalWater.current
+    // "Use fish cover" shows the fish in every theme, not only in Water.
+    if (url == null && uri?.scheme == CoverArt.SCHEME && uri.host == CoverArt.FISH) {
+        Box(m) { if (fallback != null) fallback() else FishTile(seed, Modifier.fillMaxSize()) }
+        return
+    }
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(ctx).data(data).crossfade(true).build(),
         contentDescription = null,
@@ -255,7 +261,7 @@ fun SongMenuSheet(menu: SongMenu, onDismiss: () -> Unit) {
             onDismiss()
         }
     }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Row(Modifier.padding(horizontal = 20.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             ArtImage(song.artUri, size = 56.dp, seed = song.album)
             Spacer(Modifier.width(14.dp))
