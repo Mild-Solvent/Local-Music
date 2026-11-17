@@ -1,0 +1,215 @@
+package com.lyra.player.update
+
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageInstaller
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import com.lyra.player.BuildConfig
+import com.lyra.player.LyraApp
+import com.lyra.player.data.Prefs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.MessageDigest
+
+/**
+ * In-app updates from the devbox app store (https://devbox.tail20cc8f.ts.net/apps).
+ *
+ * The app only goes online here when it checks (at most every 12 hours, or when asked) and when
+ * she taps Update. The APK is checked against its sha256 and installed with Android's own
+ * installer, which also refuses anything not signed with the same key as the installed app.
+ */
+object Updater {
+    private val BASE = BuildConfig.UPDATE_HOST + "/f/local-music/"
+    private val API = BuildConfig.UPDATE_HOST + "/api/apps"
+    private val ABI_TAG = mapOf("arm64-v8a" to "arm64", "armeabi-v7a" to "armv7", "x86_64" to "x86_64")
+    private const val AUTO_EVERY_MS = 12 * 60 * 60 * 1000L
+
+    data class Release(val versionCode: Int, val versionName: String, val notes: String, val file: String, val sha256: String)
+
+    sealed interface State {
+        data object Idle : State
+        data object Checking : State
+        data object UpToDate : State
+        data class Available(val release: Release) : State
+        data class Downloading(val release: Release, val progress: Float) : State
+        data class Installing(val release: Release) : State
+        data class Failed(val message: String) : State
+    }
+
+    private val _state = MutableStateFlow<State>(State.Idle)
+    val state: StateFlow<State> = _state.asStateFlow()
+
+    /** True while the "update available" pop-up should show. */
+    private val _prompt = MutableStateFlow(false)
+    val prompt: StateFlow<Boolean> = _prompt.asStateFlow()
+
+    /** Quiet check on app start, at most every 12 hours. Nothing is shown when offline. */
+    fun autoCheck() {
+        if (System.currentTimeMillis() - Prefs.lastUpdateCheck < AUTO_EVERY_MS) return
+        LyraApp.appScope.launch { check(manual = false) }
+    }
+
+    fun checkNow() { LyraApp.appScope.launch { check(manual = true) } }
+
+    private suspend fun check(manual: Boolean) {
+        if (_state.value is State.Downloading || _state.value is State.Installing) return
+        _state.value = State.Checking
+        val rel = runCatching { withContext(Dispatchers.IO) { fetchLatest() } }.getOrNull()
+        Prefs.lastUpdateCheck = System.currentTimeMillis()
+        val newer = rel != null && rel.versionCode > BuildConfig.VERSION_CODE
+        _state.value = when {
+            newer -> State.Available(rel!!)
+            rel != null -> State.UpToDate
+            manual -> State.Failed("Couldn't reach the update server. Check your internet and try again.")
+            else -> State.Idle
+        }
+        if (newer && (manual || Prefs.snoozedVersion != rel!!.versionCode)) _prompt.value = true
+    }
+
+    /**
+     * Reads the devbox store's public app list (GET /apps/api/apps). The Muzza entry carries
+     * meta.versionCode, meta.version, meta.whatsNew (from ~/downloadables/local-music/meta.json),
+     * optional meta.sha256 {file: hash}, and files[].path (+ optional files[].sha256).
+     */
+    private fun fetchLatest(): Release {
+        val body = get(API).decodeToString().trim()
+        val list = if (body.startsWith("[")) org.json.JSONArray(body) else JSONObject(body).let { o -> o.optJSONArray("apps") ?: o.optJSONArray("items") ?: error("Bad feed") }
+        val app = (0 until list.length()).map { list.getJSONObject(it) }.firstOrNull { it.optString("name") == "local-music" } ?: error("Muzza not in store")
+        val meta = app.optJSONObject("meta") ?: JSONObject()
+        val code = meta.optInt("versionCode", -1).takeIf { it > 0 } ?: error("No versionCode")
+        val files = app.optJSONArray("files") ?: error("No files")
+        val paths = (0 until files.length()).map { files.getJSONObject(it) }
+        val tags = Build.SUPPORTED_ABIS.mapNotNull { abi -> ABI_TAG[abi] }
+        val file = tags.firstNotNullOfOrNull { tag -> paths.firstOrNull { it.optString("path").endsWith("-$tag.apk") } } ?: error("No APK for this phone")
+        val path = file.getString("path")
+        val sha = file.optString("sha256").ifEmpty { meta.optJSONObject("sha256")?.optString(path.substringAfterLast('/')).orEmpty() }
+        return Release(code, meta.optString("version", "$code"), meta.optString("whatsNew", ""), path, sha.lowercase())
+    }
+
+    private fun get(url: String): ByteArray {
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 10_000; c.readTimeout = 15_000
+        c.useCaches = false
+        try {
+            if (c.responseCode != 200) error("HTTP ${c.responseCode}")
+            return c.inputStream.use { it.readBytes() }
+        } finally { c.disconnect() }
+    }
+
+    /** "Later" on the pop-up: don't pop up again for this version (Settings still offers it). */
+    fun later() {
+        (_state.value as? State.Available)?.let { Prefs.snoozedVersion = it.release.versionCode }
+        _prompt.value = false
+    }
+
+    /** Android has to allow Muzza to install apps once; this opens that switch. */
+    fun canInstall(ctx: Context) = ctx.packageManager.canRequestPackageInstalls()
+    fun openInstallPermission(ctx: Context) {
+        ctx.startActivity(
+            Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    fun downloadAndInstall(ctx: Context, rel: Release) {
+        _prompt.value = false
+        val app = ctx.applicationContext
+        LyraApp.appScope.launch {
+            val file = File(app.cacheDir, "updates/muzza-update.apk").apply { parentFile?.mkdirs(); delete() }
+            try {
+                _state.value = State.Downloading(rel, 0f)
+                withContext(Dispatchers.IO) { download(BASE + rel.file.split('/').joinToString("/") { Uri.encode(it) }, file) { p -> _state.value = State.Downloading(rel, p) } }
+                val sum = withContext(Dispatchers.IO) { sha256(file) }
+                // Android also refuses an APK not signed with Muzza's own key, so this is a second check.
+                if (rel.sha256.isNotEmpty() && sum != rel.sha256) error("The download was damaged. Please try again.")
+                _state.value = State.Installing(rel)
+                withContext(Dispatchers.IO) { install(app, file) }
+            } catch (e: Exception) {
+                file.delete()
+                _state.value = State.Failed(e.message ?: "Update failed. Please try again.")
+            }
+        }
+    }
+
+    private fun download(url: String, to: File, progress: (Float) -> Unit) {
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 15_000; c.readTimeout = 30_000
+        try {
+            if (c.responseCode != 200) error("Download failed (HTTP ${c.responseCode})")
+            val total = c.contentLengthLong
+            c.inputStream.use { input ->
+                to.outputStream().use { out ->
+                    val buf = ByteArray(64 * 1024)
+                    var done = 0L
+                    var last = 0L
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n < 0) break
+                        out.write(buf, 0, n); done += n
+                        if (total > 0 && done - last > 512 * 1024) { last = done; progress(done.toFloat() / total) }
+                    }
+                }
+            }
+        } finally { c.disconnect() }
+    }
+
+    private fun sha256(f: File): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        f.inputStream().use { i ->
+            val b = ByteArray(64 * 1024)
+            while (true) { val n = i.read(b); if (n < 0) break; md.update(b, 0, n) }
+        }
+        return md.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private fun install(ctx: Context, apk: File) {
+        val installer = ctx.packageManager.packageInstaller
+        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
+            setAppPackageName(ctx.packageName)
+            if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        }
+        val id = installer.createSession(params)
+        installer.openSession(id).use { s ->
+            s.openWrite("muzza.apk", 0, apk.length()).use { out ->
+                apk.inputStream().use { it.copyTo(out) }
+                s.fsync(out)
+            }
+            val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
+            val pi = PendingIntent.getBroadcast(ctx, id, Intent(ctx, InstallResultReceiver::class.java), flags)
+            s.commit(pi.intentSender)
+        }
+        apk.delete()
+    }
+
+    internal fun onInstallResult(status: Int, message: String?) {
+        when (status) {
+            PackageInstaller.STATUS_SUCCESS, PackageInstaller.STATUS_PENDING_USER_ACTION -> Unit
+            PackageInstaller.STATUS_FAILURE_ABORTED -> _state.value = State.Idle
+            else -> _state.value = State.Failed(message ?: "Android couldn't install the update.")
+        }
+    }
+}
+
+/** Gets the installer's answer; when Android needs her to tap "Update", it opens that screen. */
+class InstallResultReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+        if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            val confirm: Intent? = if (Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+            else @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
+            confirm?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)?.let { context.startActivity(it) }
+        }
+        Updater.onInstallResult(status, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE))
+    }
+}

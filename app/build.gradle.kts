@@ -20,8 +20,13 @@ android {
         applicationId = "com.lyra.player"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.1.1"
+        // -PmuzzaVersionCode / -PmuzzaVersionName / -PupdateHost only for testing the in-app updater
+        // against a local test feed on the emulator; normal builds use the defaults below.
+        versionCode = (project.findProperty("muzzaVersionCode") as String?)?.toInt() ?: 5
+        versionName = (project.findProperty("muzzaVersionName") as String?) ?: "1.2.0"
+        val updateHost = (project.findProperty("updateHost") as String?) ?: "https://devbox.tail20cc8f.ts.net/apps"
+        buildConfigField("String", "UPDATE_HOST", "\"$updateHost\"")
+        manifestPlaceholders["cleartext"] = updateHost.startsWith("http://").toString()
     }
 
     signingConfigs {

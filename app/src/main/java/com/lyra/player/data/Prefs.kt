@@ -56,6 +56,14 @@ object Prefs {
         get() = sp.getBoolean("dl_playlists", true)
         set(v) = sp.edit().putBoolean("dl_playlists", v).apply()
 
+    var lastUpdateCheck: Long
+        get() = sp.getLong("update_checked", 0L)
+        set(v) = sp.edit().putLong("update_checked", v).apply()
+    /** Version she tapped "Later" on, so the pop-up doesn't nag about it again. */
+    var snoozedVersion: Int
+        get() = sp.getInt("update_snoozed", 0)
+        set(v) = sp.edit().putInt("update_snoozed", v).apply()
+
     var engineUpdatedAt: Long
         get() = sp.getLong("engine_updated", 0L)
         set(v) = sp.edit().putLong("engine_updated", v).apply()

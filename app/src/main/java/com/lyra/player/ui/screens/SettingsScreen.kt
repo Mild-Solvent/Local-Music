@@ -146,7 +146,7 @@ fun SettingsScreen() {
 
             HorizontalDivider()
             Header("About")
-            Text("Muzza ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyLarge)
+            com.lyra.player.ui.UpdateSection()
             Text("No ads. No account. No tracking. Plays fully offline; the internet is only used when you download.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(32.dp))

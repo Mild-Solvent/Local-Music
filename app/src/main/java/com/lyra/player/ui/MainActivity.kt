@@ -157,6 +157,8 @@ class MainActivity : ComponentActivity() {
             MusicRepository.loaded.first { it }
             PlayerConnection.onLibraryLoaded()
         }
+        LaunchedEffect(Unit) { com.lyra.player.update.Updater.autoCheck() }
+        com.lyra.player.ui.UpdatePrompt()
         AppScaffold()
     }
 
